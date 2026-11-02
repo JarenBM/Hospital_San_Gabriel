@@ -1,0 +1,68 @@
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 1.5rem 1rem;
+  background:
+    radial-gradient(70% 55% at 50% 0%, rgb(29 127 212 / 8%) 0%, transparent 65%),
+    var(--sigih-superficie);
+}
+
+.error__tarjeta {
+  width: 100%;
+  max-width: 34rem;
+  border-top: 4px solid var(--sigih-acento);
+  text-align: center;
+}
+
+.error__codigo {
+  display: block;
+  color: var(--sigih-borde);
+  font-size: 3.4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.error__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  margin-top: 0.9rem;
+  border-radius: 1rem;
+  background-color: #e7f1fb;
+  color: #1d6fbf;
+  font-size: 1.6rem;
+}
+
+.error__titulo {
+  margin: 1rem 0 0.6rem;
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.error__mensaje {
+  max-width: 27rem;
+  margin: 0 auto 1.5rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.error__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.error__nota {
+  margin: 1.5rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.76rem;
+}

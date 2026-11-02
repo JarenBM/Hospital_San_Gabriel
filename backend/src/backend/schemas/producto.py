@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-# Límites reales de las columnas de dbo.Productos.
+# Límites reales de las columnas del producto.
 Codigo = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)
 ]

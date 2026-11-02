@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, status
 
-from backend.dependencies import obtener_usuario_actual
+from backend.dependencies import requiere_permiso
 from backend.schemas.auth import UsuarioAutenticado
 from backend.schemas.movimiento import (
     EntradaCrear,
@@ -22,8 +22,12 @@ from backend.services.movimiento_service import (
 
 router = APIRouter(prefix="/api/movimientos", tags=["Movimientos"])
 
+LECTURA = Depends(requiere_permiso("movimientos:leer"))
+ENTRADA = requiere_permiso("movimientos:entrada")
+SALIDA = requiere_permiso("movimientos:salida")
 
-@router.get("", response_model=list[MovimientoListado])
+
+@router.get("", response_model=list[MovimientoListado], dependencies=[LECTURA])
 def listar(
     id_producto: Annotated[int | None, Query(gt=0)] = None,
     tipo_movimiento: Annotated[Literal["ENTRADA", "SALIDA"] | None, Query()] = None,
@@ -31,7 +35,7 @@ def listar(
     desde: Annotated[date | None, Query()] = None,
     hasta: Annotated[date | None, Query()] = None,
 ) -> list[MovimientoListado]:
-    """Lista movimientos usando dbo.sp_Movimiento_Listar."""
+    """Lista movimientos usando dbo.sp_Movimientos_Listar."""
     return listar_movimientos(id_producto, tipo_movimiento, id_area, desde, hasta)
 
 
@@ -40,9 +44,9 @@ def listar(
 )
 def crear_entrada(
     datos: EntradaCrear,
-    usuario: Annotated[UsuarioAutenticado, Depends(obtener_usuario_actual)],
+    usuario: Annotated[UsuarioAutenticado, Depends(ENTRADA)],
 ) -> EntradaRegistrada:
-    """Registra una entrada usando dbo.sp_Entrada_Registrar."""
+    """Registra una entrada usando dbo.sp_Movimientos_RegistrarEntrada."""
     return registrar_entrada(datos, usuario.id_usuario)
 
 
@@ -51,7 +55,7 @@ def crear_entrada(
 )
 def crear_salida(
     datos: SalidaCrear,
-    usuario: Annotated[UsuarioAutenticado, Depends(obtener_usuario_actual)],
+    usuario: Annotated[UsuarioAutenticado, Depends(SALIDA)],
 ) -> SalidaRegistrada:
-    """Registra una salida usando dbo.sp_Salida_Registrar."""
+    """Registra una salida usando dbo.sp_Movimientos_RegistrarSalida."""
     return registrar_salida(datos, usuario.id_usuario)

@@ -17,6 +17,11 @@ from backend.errors import TokenInvalido
 _VERIFICADOR = PasswordHasher()
 
 
+def hashear_password(password: str) -> str:
+    """Genera un hash Argon2id para almacenar en la base de datos."""
+    return _VERIFICADOR.hash(password)
+
+
 def verificar_password(password_hash: str, password: str) -> bool:
     """Compara una contraseña en claro con el hash Argon2 almacenado.
 

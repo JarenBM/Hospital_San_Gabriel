@@ -1,0 +1,165 @@
+/* ============================================================
+   SIGIH — Estilos globales
+   Bootstrap 5 y Bootstrap Icons se cargan desde angular.json.
+   ============================================================ */
+
+:root {
+  --sigih-primario: #0f6e6e;
+  --sigih-primario-oscuro: #0a5252;
+  --sigih-primario-claro: #e6f4f4;
+  --sigih-acento: #1d7fd4;
+  --sigih-superficie: #f6f8fa;
+  --sigih-borde: #dfe6ec;
+  --sigih-texto: #1f2d35;
+  --sigih-texto-suave: #5d6f7b;
+
+  --bs-primary: var(--sigih-primario);
+  --bs-primary-rgb: 15, 110, 110;
+  --bs-link-color: var(--sigih-primario);
+  --bs-link-hover-color: var(--sigih-primario-oscuro);
+  --bs-body-color: var(--sigih-texto);
+  --bs-body-bg: var(--sigih-superficie);
+  --bs-border-color: var(--sigih-borde);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--sigih-texto);
+  background-color: var(--sigih-superficie);
+  -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+  display: block;
+  min-height: 100dvh;
+}
+
+/* ---------- Utilidades reutilizables ---------- */
+
+.sigih-card {
+  border: 1px solid var(--sigih-borde);
+  border-radius: 0.85rem;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgb(16 42 54 / 6%);
+}
+
+.sigih-titulo {
+  color: var(--sigih-primario-oscuro);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sigih-texto-suave {
+  color: var(--sigih-texto-suave);
+}
+
+.sigih-badge-permiso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sigih-tabla {
+  --bs-table-hover-bg: var(--sigih-primario-claro);
+  margin-bottom: 0;
+}
+
+.sigih-tabla thead th {
+  border-bottom-width: 1px;
+  color: var(--sigih-texto-suave);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- Botones ---------- */
+
+.btn-primary {
+  --bs-btn-bg: var(--sigih-primario);
+  --bs-btn-border-color: var(--sigih-primario);
+  --bs-btn-hover-bg: var(--sigih-primario-oscuro);
+  --bs-btn-hover-border-color: var(--sigih-primario-oscuro);
+  --bs-btn-active-bg: var(--sigih-primario-oscuro);
+  --bs-btn-active-border-color: var(--sigih-primario-oscuro);
+  --bs-btn-disabled-bg: var(--sigih-primario);
+  --bs-btn-disabled-border-color: var(--sigih-primario);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sigih-primario);
+  --bs-btn-border-color: var(--sigih-primario);
+  --bs-btn-hover-bg: var(--sigih-primario);
+  --bs-btn-hover-border-color: var(--sigih-primario);
+  --bs-btn-active-bg: var(--sigih-primario-oscuro);
+  --bs-btn-active-border-color: var(--sigih-primario-oscuro);
+}
+
+/* ---------- Formularios ---------- */
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sigih-primario);
+  box-shadow: 0 0 0 0.2rem rgb(15 110 110 / 15%);
+}
+
+.form-label {
+  color: var(--sigih-texto-suave);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---------- Scrollbar ---------- */
+
+* {
+  scrollbar-color: #b9c7d1 transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+  background-color: #b9c7d1;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #97a9b6;
+}
+
+/* ---------- Accesibilidad ---------- */
+
+:focus-visible {
+  outline: 2px solid var(--sigih-acento);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

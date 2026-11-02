@@ -73,3 +73,27 @@ El layout `src/` es obligatorio: el paquete debe seguir en `src/backend/` porque
 - Código simple y legible: evitar capas, ORMs o librerías innecesarias.
 - Python `>=3.14` (`.python-version`); no bajar la versión sin motivo.
 - Sin runner de tests instalado: `uv run pytest` falla hasta `uv add --dev pytest` (y `httpx` para el `TestClient` de FastAPI).
+
+## Actualización FASE BUILD (2026-11)
+
+Esta sección reemplaza las restricciones de alcance anteriores.
+
+- El SQL de instalación vive en `database/` (raíz), con scripts idempotentes
+  `00`–`17` y verificación `99`. Usar `sqlcmd -f 65001` para leer UTF-8 y
+  `-I` si se ejecuta DML manual sobre `Lotes`.
+- El backend solo ejecuta stored procedures a través de
+  `repositories/base.py` y el catálogo `repositories/procedimientos.py`.
+  No hay SQL directo ni nombres de tablas en Python.
+- La conexión usa el usuario `sigih_app`: `GRANT EXECUTE ON SCHEMA::dbo` y
+  `DENY SELECT/INSERT/UPDATE/DELETE ON SCHEMA::dbo`.
+- RBAC con roles `ADMINISTRADOR`, `ALMACEN`, `CONSULTA` y permisos
+  `modulo:accion`. Todos los endpoints, incluidos los GET, exigen permiso.
+- Endpoints nuevos: `/api/usuarios`, `/api/roles`, `/api/permisos`,
+  CRUD completo de `/api/areas`, `/api/dashboard` y `/api/reportes`.
+- `GET /api/auth/me` devuelve también `roles` y `permisos`.
+- Auditoría best-effort en cada escritura; el listado de auditoría queda
+  diferido.
+- Conflictos 409: producto con existencias, categoría con productos activos
+  y último administrador activo.
+- `sp_Productos_Actualizar` acepta `@activo`, pero el schema `PUT` no lo
+  expone: el backend envía `NULL` para conservar el estado.

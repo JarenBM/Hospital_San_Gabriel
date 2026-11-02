@@ -1,6 +1,7 @@
 """Lógica de negocio de productos."""
 
 from backend.errors import ProductoNoEncontrado
+from backend.repositories import auditoria_repository
 from backend.repositories.producto_repository import (
     actualizar_producto as actualizar_producto_repositorio,
     crear_producto as crear_producto_repositorio,
@@ -34,7 +35,9 @@ def obtener_producto(id_producto: int) -> Producto:
     return Producto(**fila)
 
 
-def crear_producto(datos: ProductoCrear) -> Producto:
+def crear_producto(
+    datos: ProductoCrear, id_actor: int | None = None
+) -> Producto:
     """Registra un producto y devuelve su estado real en la base."""
     id_producto = crear_producto_repositorio(
         datos.id_categoria,
@@ -47,13 +50,20 @@ def crear_producto(datos: ProductoCrear) -> Producto:
         datos.maneja_lotes,
         datos.requiere_vencimiento,
     )
+    auditoria_repository.registrar(
+        id_actor, "CREAR", "productos", id_producto, f"Código: {datos.codigo}"
+    )
     return obtener_producto(id_producto)
 
 
-def actualizar_producto(id_producto: int, datos: ProductoActualizar) -> Producto:
+def actualizar_producto(
+    id_producto: int,
+    datos: ProductoActualizar,
+    id_actor: int | None = None,
+) -> Producto:
     """Actualiza un producto y devuelve su estado final.
 
-    maneja_lotes, requiere_vencimiento y activo no se modifican aquí.
+    ``activo`` no se modifica aquí: se envía None para conservar el estado.
     """
     actualizar_producto_repositorio(
         id_producto,
@@ -64,10 +74,19 @@ def actualizar_producto(id_producto: int, datos: ProductoActualizar) -> Producto
         datos.unidad_medida,
         datos.precio_unitario,
         datos.stock_minimo,
+        activo=None,
+    )
+    auditoria_repository.registrar(
+        id_actor, "ACTUALIZAR", "productos", id_producto, f"Código: {datos.codigo}"
     )
     return obtener_producto(id_producto)
 
 
-def desactivar_producto(id_producto: int) -> None:
-    """Desactiva un producto (eliminación lógica, idempotente)."""
+def desactivar_producto(
+    id_producto: int, id_actor: int | None = None
+) -> None:
+    """Desactiva un producto (el SP bloquea si tiene existencias)."""
     desactivar_producto_repositorio(id_producto)
+    auditoria_repository.registrar(
+        id_actor, "DESACTIVAR", "productos", id_producto
+    )

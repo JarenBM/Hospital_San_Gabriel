@@ -9,7 +9,6 @@ from datetime import date
 
 import pyodbc
 
-from backend.database import obtener_conexion
 from backend.errors import (
     DatosInvalidos,
     LoteNoEncontrado,
@@ -17,7 +16,12 @@ from backend.errors import (
     ReferenciaInvalida,
     StockInsuficiente,
 )
+from backend.repositories.base import (
+    ejecutar_lista,
+    ejecutar_uno,
+)
 from backend.repositories.errores_sql import clasificar
+from backend.repositories.procedimientos import Sp
 
 
 def _traducir_error(error: pyodbc.Error) -> Exception:
@@ -40,12 +44,6 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
     return error
 
 
-def _fila_a_diccionario(cursor: pyodbc.Cursor) -> dict:
-    """Convierte la primera fila del cursor en un diccionario."""
-    columnas = [columna[0] for columna in cursor.description]
-    return dict(zip(columnas, cursor.fetchone()))
-
-
 def registrar_entrada(
     id_producto: int,
     id_usuario: int,
@@ -54,22 +52,20 @@ def registrar_entrada(
     numero_lote: str | None,
     fecha_vencimiento: date | None,
 ) -> dict:
-    """Ejecuta dbo.sp_Entrada_Registrar (transaccional dentro del SP)."""
+    """Ejecuta dbo.sp_Movimientos_RegistrarEntrada."""
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute(
-                "EXEC dbo.sp_Entrada_Registrar "
-                "@id_producto = ?, @id_usuario = ?, @cantidad = ?, @motivo = ?, "
-                "@numero_lote = ?, @fecha_vencimiento = ?",
-                id_producto,
-                id_usuario,
-                cantidad,
-                motivo,
-                numero_lote,
-                fecha_vencimiento,
-            )
-            return _fila_a_diccionario(cursor)
+        fila = ejecutar_uno(
+            Sp.MOVIMIENTOS_REGISTRAR_ENTRADA,
+            {
+                "id_producto": id_producto,
+                "id_usuario": id_usuario,
+                "cantidad": cantidad,
+                "motivo": motivo,
+                "numero_lote": numero_lote,
+                "fecha_vencimiento": fecha_vencimiento,
+            },
+        )
+        return fila or {}
     except pyodbc.Error as error:
         raise _traducir_error(error) from error
 
@@ -82,22 +78,20 @@ def registrar_salida(
     cantidad: int,
     motivo: str,
 ) -> dict:
-    """Ejecuta dbo.sp_Salida_Registrar (transaccional dentro del SP)."""
+    """Ejecuta dbo.sp_Movimientos_RegistrarSalida."""
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute(
-                "EXEC dbo.sp_Salida_Registrar "
-                "@id_producto = ?, @id_lote = ?, @id_usuario = ?, @id_area = ?, "
-                "@cantidad = ?, @motivo = ?",
-                id_producto,
-                id_lote,
-                id_usuario,
-                id_area,
-                cantidad,
-                motivo,
-            )
-            return _fila_a_diccionario(cursor)
+        fila = ejecutar_uno(
+            Sp.MOVIMIENTOS_REGISTRAR_SALIDA,
+            {
+                "id_producto": id_producto,
+                "id_lote": id_lote,
+                "id_usuario": id_usuario,
+                "id_area": id_area,
+                "cantidad": cantidad,
+                "motivo": motivo,
+            },
+        )
+        return fila or {}
     except pyodbc.Error as error:
         raise _traducir_error(error) from error
 
@@ -109,18 +103,21 @@ def listar_movimientos(
     desde: date | None = None,
     hasta: date | None = None,
 ) -> list[dict]:
-    """Ejecuta dbo.sp_Movimiento_Listar con sus cinco filtros opcionales."""
-    with obtener_conexion() as conexion:
-        cursor = conexion.cursor()
-        cursor.execute(
-            "EXEC dbo.sp_Movimiento_Listar "
-            "@id_producto = ?, @tipo_movimiento = ?, @id_area = ?, "
-            "@desde = ?, @hasta = ?",
-            id_producto,
-            tipo_movimiento,
-            id_area,
-            desde,
-            hasta,
-        )
-        columnas = [columna[0] for columna in cursor.description]
-        return [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+    """Ejecuta dbo.sp_Movimientos_Listar con sus cinco filtros opcionales."""
+    return ejecutar_lista(
+        Sp.MOVIMIENTOS_LISTAR,
+        {
+            "id_producto": id_producto,
+            "tipo_movimiento": tipo_movimiento,
+            "id_area": id_area,
+            "desde": desde,
+            "hasta": hasta,
+        },
+    )
+
+
+def obtener_movimiento(id_movimiento: int) -> dict | None:
+    """Ejecuta dbo.sp_Movimientos_Obtener."""
+    return ejecutar_uno(
+        Sp.MOVIMIENTOS_OBTENER, {"id_movimiento": id_movimiento}
+    )

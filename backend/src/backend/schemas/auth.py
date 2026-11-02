@@ -24,3 +24,5 @@ class UsuarioAutenticado(BaseModel):
     nombre: str
     email: str
     activo: bool
+    roles: list[str] = []
+    permisos: list[str] = []

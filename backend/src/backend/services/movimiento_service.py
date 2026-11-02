@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from backend.repositories import auditoria_repository
 from backend.repositories.movimiento_repository import (
     listar_movimientos as listar_movimientos_repositorio,
     registrar_entrada as registrar_entrada_repositorio,
@@ -43,6 +44,13 @@ def registrar_entrada(datos: EntradaCrear, id_usuario: int) -> EntradaRegistrada
         datos.numero_lote,
         datos.fecha_vencimiento,
     )
+    auditoria_repository.registrar(
+        id_usuario,
+        "ENTRADA",
+        "movimientos",
+        fila.get("id_movimiento"),
+        f"Producto: {datos.id_producto}, cantidad: {datos.cantidad}",
+    )
     return EntradaRegistrada(**fila)
 
 
@@ -55,5 +63,13 @@ def registrar_salida(datos: SalidaCrear, id_usuario: int) -> SalidaRegistrada:
         datos.id_area,
         datos.cantidad,
         datos.motivo,
+    )
+    auditoria_repository.registrar(
+        id_usuario,
+        "SALIDA",
+        "movimientos",
+        fila.get("id_movimiento"),
+        f"Producto: {datos.id_producto}, área: {datos.id_area}, "
+        f"cantidad: {datos.cantidad}",
     )
     return SalidaRegistrada(**fila)

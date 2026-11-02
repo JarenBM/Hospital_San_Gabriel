@@ -1,0 +1,28 @@
+<section class="pendiente">
+  <article class="pendiente__tarjeta card sigih-card">
+    <div class="card-body p-4 p-sm-5 text-center">
+      <span class="pendiente__icono" aria-hidden="true">
+        <i class="bi {{ icono() }}"></i>
+      </span>
+
+      <span class="badge text-bg-warning pendiente__estado">
+        <i class="bi bi-cone-striped me-1"></i>
+        En construcción
+      </span>
+
+      <h2 class="pendiente__titulo">{{ titulo() }}</h2>
+      <p class="pendiente__descripcion">{{ descripcion() }}</p>
+
+      <p class="pendiente__aviso">
+        Este módulo forma parte del alcance de SIGIH y se habilitará en una
+        próxima entrega. Mientras tanto puede seguir usando el dashboard y los
+        módulos ya disponibles en el menú.
+      </p>
+
+      <a class="btn btn-primary" [routerLink]="rutaInicio()">
+        <i class="bi bi-house-door me-2"></i>
+        Volver al inicio
+      </a>
+    </div>
+  </article>
+</section>

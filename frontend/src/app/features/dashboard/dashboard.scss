@@ -1,0 +1,168 @@
+/* ============================================================
+   Dashboard
+   ============================================================ */
+
+.dashboard__bienvenida {
+  border-left: 4px solid var(--sigih-primario);
+}
+
+.dashboard__fecha {
+  color: var(--sigih-texto-suave);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+.dashboard__saludo {
+  margin-bottom: 0.3rem;
+  color: var(--sigih-primario-oscuro);
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__detalle {
+  color: var(--sigih-texto-suave);
+  font-size: 0.82rem;
+}
+
+.dashboard__sesion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--sigih-borde);
+}
+
+.dashboard__permisos {
+  color: var(--sigih-texto-suave);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+/* ---------- Métricas ---------- */
+
+.dashboard__metrica .card-body {
+  padding: 1.15rem;
+}
+
+.dashboard__metrica-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.7rem;
+  font-size: 1.15rem;
+}
+
+.dashboard__metrica-icono--azul {
+  background-color: #e7f1fb;
+  color: #1d6fbf;
+}
+
+.dashboard__metrica-icono--verde {
+  background-color: #e3f6ee;
+  color: #16835a;
+}
+
+.dashboard__metrica-icono--ambar {
+  background-color: #fdf3df;
+  color: #a96d08;
+}
+
+.dashboard__metrica-icono--rojo {
+  background-color: #fdeaea;
+  color: #c43c3c;
+}
+
+.dashboard__metrica-etiqueta {
+  margin: 0.75rem 0 0.1rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard__metrica-valor {
+  margin: 0;
+  color: var(--sigih-texto);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__metrica-valor--moneda {
+  font-size: 1.35rem;
+}
+
+.dashboard__metrica-pie {
+  margin: 0.2rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+}
+
+/* ---------- Accesos rápidos ---------- */
+
+.dashboard__acceso {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.dashboard__acceso:hover {
+  border-color: rgb(15 110 110 / 35%);
+  box-shadow: 0 10px 24px rgb(16 42 54 / 10%);
+  transform: translateY(-2px);
+}
+
+.dashboard__acceso-icono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.65rem;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.1rem;
+}
+
+.dashboard__acceso-detalle {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.dashboard__acceso-flecha {
+  align-self: center;
+  color: var(--sigih-texto-suave);
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+@media (max-width: 991.98px) {
+  .dashboard__sesion {
+    flex-direction: row;
+    align-items: center;
+    padding: 0.75rem 0 0;
+    border-top: 1px solid var(--sigih-borde);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard__acceso:hover {
+    transform: none;
+  }
+}

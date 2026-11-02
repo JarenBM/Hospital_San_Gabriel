@@ -1,12 +1,13 @@
-"""Consultas de solo lectura para alertas de inventario."""
+"""Consultas de solo lectura para alertas de inventario y dashboard."""
 
 from datetime import date
 
 import pyodbc
 
-from backend.database import obtener_conexion
 from backend.errors import DatosInvalidos
+from backend.repositories.base import ejecutar_lista, ejecutar_uno
 from backend.repositories.errores_sql import clasificar
+from backend.repositories.procedimientos import Sp
 
 
 def _traducir_error(error: pyodbc.Error) -> Exception:
@@ -16,31 +17,19 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
     return error
 
 
-def _filas_a_diccionarios(cursor: pyodbc.Cursor) -> list[dict]:
-    """Convierte el resultado del cursor en diccionarios usando sus columnas."""
-    columnas = [columna[0] for columna in cursor.description]
-    return [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
-
-
 def listar_stock_bajo() -> list[dict]:
-    """Ejecuta dbo.sp_Producto_StockBajo (sin parámetros)."""
-    with obtener_conexion() as conexion:
-        cursor = conexion.cursor()
-        cursor.execute("EXEC dbo.sp_Producto_StockBajo")
-        return _filas_a_diccionarios(cursor)
+    """Ejecuta dbo.sp_Alertas_StockBajo."""
+    return ejecutar_lista(Sp.ALERTAS_STOCK_BAJO)
 
 
 def listar_lotes_vencimientos(dias: int) -> list[dict]:
-    """Ejecuta dbo.sp_Lote_Vencimientos y devuelve PROXIMO y VENCIDO.
+    """Ejecuta dbo.sp_Alertas_PorVencer y devuelve PROXIMO y VENCIDO.
 
     El SP no tiene cota inferior: con ``dias=0`` incluye todos los lotes
     vencidos con existencias, sin importar cuán antiguos sean.
     """
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute("EXEC dbo.sp_Lote_Vencimientos @dias = ?", dias)
-            return _filas_a_diccionarios(cursor)
+        return ejecutar_lista(Sp.ALERTAS_POR_VENCER, {"dias": dias})
     except pyodbc.Error as error:
         raise _traducir_error(error) from error
 
@@ -50,12 +39,4 @@ def obtener_resumen(
     hasta: date | None = None,
 ) -> dict:
     """Ejecuta dbo.sp_Dashboard_Resumen con su rango de fechas opcional."""
-    with obtener_conexion() as conexion:
-        cursor = conexion.cursor()
-        cursor.execute(
-            "EXEC dbo.sp_Dashboard_Resumen @desde = ?, @hasta = ?",
-            desde,
-            hasta,
-        )
-        columnas = [columna[0] for columna in cursor.description]
-        return dict(zip(columnas, cursor.fetchone()))
+    return ejecutar_uno(Sp.DASHBOARD_RESUMEN, {"desde": desde, "hasta": hasta}) or {}

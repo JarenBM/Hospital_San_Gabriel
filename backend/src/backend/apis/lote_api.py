@@ -1,14 +1,17 @@
 """Endpoints HTTP de lotes."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from backend.dependencies import requiere_permiso
 from backend.schemas.lote import Lote
 from backend.services.lote_service import listar_lotes_por_producto
 
 router = APIRouter(prefix="/api/productos", tags=["Lotes"])
 
+LECTURA = Depends(requiere_permiso("lotes:leer"))
 
-@router.get("/{id_producto}/lotes", response_model=list[Lote])
+
+@router.get("/{id_producto}/lotes", response_model=list[Lote], dependencies=[LECTURA])
 def listar(id_producto: int) -> list[Lote]:
-    """Lista los lotes de un producto usando dbo.sp_Lote_ListarPorProducto."""
+    """Lista los lotes de un producto usando dbo.sp_Lotes_ListarPorProducto."""
     return listar_lotes_por_producto(id_producto)

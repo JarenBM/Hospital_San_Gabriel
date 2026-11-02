@@ -2,9 +2,20 @@
 
 import pyodbc
 
-from backend.database import obtener_conexion
-from backend.errors import CategoriaDuplicada, CategoriaNoEncontrada
+from backend.errors import (
+    CategoriaDuplicada,
+    CategoriaNoEncontrada,
+    ConflictoEstado,
+    DatosInvalidos,
+)
+from backend.repositories.base import (
+    ejecutar_accion,
+    ejecutar_escalar,
+    ejecutar_lista,
+    ejecutar_uno,
+)
 from backend.repositories.errores_sql import clasificar
+from backend.repositories.procedimientos import Sp
 
 
 def _traducir_error(error: pyodbc.Error) -> Exception:
@@ -14,47 +25,32 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
         return CategoriaDuplicada("Ya existe una categoría con ese nombre")
     if tipo == "no_encontrado":
         return CategoriaNoEncontrada("La categoría no existe")
+    if tipo == "conflicto_categoria":
+        return ConflictoEstado("La categoría tiene productos activos")
+    if tipo == "datos_invalidos":
+        return DatosInvalidos("Los datos de la categoría no son válidos")
     return error
 
 
-def _filas_a_diccionarios(cursor: pyodbc.Cursor) -> list[dict]:
-    """Convierte el resultado del cursor en diccionarios usando sus columnas."""
-    columnas = [columna[0] for columna in cursor.description]
-    return [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
-
-
-def listar_categorias() -> list[dict]:
-    """Ejecuta dbo.sp_Categoria_Listar (sin parámetros)."""
-    with obtener_conexion() as conexion:
-        cursor = conexion.cursor()
-        cursor.execute("EXEC dbo.sp_Categoria_Listar")
-        return _filas_a_diccionarios(cursor)
+def listar_categorias(solo_activos: bool | None = None) -> list[dict]:
+    """Ejecuta dbo.sp_Categorias_Listar."""
+    return ejecutar_lista(Sp.CATEGORIAS_LISTAR, {"solo_activos": solo_activos})
 
 
 def obtener_categoria(id_categoria: int) -> dict | None:
-    """Ejecuta dbo.sp_Categoria_Obtener. Devuelve None si no existe."""
-    with obtener_conexion() as conexion:
-        cursor = conexion.cursor()
-        cursor.execute(
-            "EXEC dbo.sp_Categoria_Obtener @id_categoria = ?", id_categoria
-        )
-        filas = _filas_a_diccionarios(cursor)
-        return filas[0] if filas else None
+    """Ejecuta dbo.sp_Categorias_Obtener."""
+    return ejecutar_uno(Sp.CATEGORIAS_OBTENER, {"id_categoria": id_categoria})
 
 
 def crear_categoria(nombre: str, descripcion: str | None) -> int:
-    """Ejecuta dbo.sp_Categoria_Crear y devuelve el id que genera el SP."""
+    """Ejecuta dbo.sp_Categorias_Crear y devuelve el id generado."""
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute(
-                "EXEC dbo.sp_Categoria_Crear @nombre = ?, @descripcion = ?",
-                nombre,
-                descripcion,
+        return int(
+            ejecutar_escalar(
+                Sp.CATEGORIAS_CREAR,
+                {"nombre": nombre, "descripcion": descripcion},
             )
-            # El SP termina con SELECT CAST(SCOPE_IDENTITY() AS INT) id_categoria
-            # y su SET NOCOUNT ON hace que ese SELECT sea el primer resultado.
-            return int(cursor.fetchone()[0])
+        )
     except pyodbc.Error as error:
         raise _traducir_error(error) from error
 
@@ -65,32 +61,24 @@ def actualizar_categoria(
     descripcion: str | None,
     activo: bool | None,
 ) -> None:
-    """Ejecuta dbo.sp_Categoria_Actualizar.
-
-    Si ``activo`` es None, el SP conserva el estado actual de la categoría.
-    """
+    """Ejecuta dbo.sp_Categorias_Actualizar."""
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute(
-                "EXEC dbo.sp_Categoria_Actualizar "
-                "@id_categoria = ?, @nombre = ?, @descripcion = ?, @activo = ?",
-                id_categoria,
-                nombre,
-                descripcion,
-                activo,
-            )
+        ejecutar_accion(
+            Sp.CATEGORIAS_ACTUALIZAR,
+            {
+                "id_categoria": id_categoria,
+                "nombre": nombre,
+                "descripcion": descripcion,
+                "activo": activo,
+            },
+        )
     except pyodbc.Error as error:
         raise _traducir_error(error) from error
 
 
 def desactivar_categoria(id_categoria: int) -> None:
-    """Ejecuta dbo.sp_Categoria_Desactivar (eliminación lógica)."""
+    """Ejecuta dbo.sp_Categorias_Desactivar (eliminación lógica)."""
     try:
-        with obtener_conexion() as conexion:
-            cursor = conexion.cursor()
-            cursor.execute(
-                "EXEC dbo.sp_Categoria_Desactivar @id_categoria = ?", id_categoria
-            )
+        ejecutar_accion(Sp.CATEGORIAS_DESACTIVAR, {"id_categoria": id_categoria})
     except pyodbc.Error as error:
         raise _traducir_error(error) from error

@@ -47,3 +47,39 @@ class CredencialesInvalidas(Exception):
 
 class TokenInvalido(Exception):
     """El token de acceso falta, es inválido, expiró o su usuario ya no sirve."""
+
+
+class UsuarioNoEncontrado(Exception):
+    """El usuario solicitado no existe."""
+
+
+class UsuarioDuplicado(Exception):
+    """Ya existe un usuario con ese correo."""
+
+
+class RolNoEncontrado(Exception):
+    """El rol solicitado no existe."""
+
+
+class RolDuplicado(Exception):
+    """Ya existe un rol con ese nombre."""
+
+
+class PermisoNoEncontrado(Exception):
+    """El permiso solicitado no existe."""
+
+
+class AreaNoEncontrada(Exception):
+    """El área solicitada no existe."""
+
+
+class AreaDuplicada(Exception):
+    """Ya existe un área con ese nombre."""
+
+
+class ConflictoEstado(Exception):
+    """La operación choca con el estado actual del recurso (409)."""
+
+
+class PermisoDenegado(Exception):
+    """El usuario autenticado no tiene el permiso requerido (403)."""

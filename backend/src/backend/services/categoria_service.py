@@ -1,6 +1,7 @@
 """Lógica de negocio de categorías."""
 
 from backend.errors import CategoriaNoEncontrada
+from backend.repositories import auditoria_repository
 from backend.repositories.categoria_repository import (
     actualizar_categoria as actualizar_categoria_repositorio,
     crear_categoria as crear_categoria_repositorio,
@@ -11,9 +12,9 @@ from backend.repositories.categoria_repository import (
 from backend.schemas.categoria import Categoria
 
 
-def listar_categorias() -> list[Categoria]:
+def listar_categorias(solo_activos: bool | None = None) -> list[Categoria]:
     """Devuelve todas las categorías, activas e inactivas."""
-    filas = listar_categorias_repositorio()
+    filas = listar_categorias_repositorio(solo_activos)
     return [Categoria(**fila) for fila in filas]
 
 
@@ -25,9 +26,14 @@ def obtener_categoria(id_categoria: int) -> Categoria:
     return Categoria(**fila)
 
 
-def crear_categoria(nombre: str, descripcion: str | None) -> Categoria:
+def crear_categoria(
+    nombre: str, descripcion: str | None, id_actor: int | None = None
+) -> Categoria:
     """Registra una categoría y devuelve el objeto creado."""
     id_categoria = crear_categoria_repositorio(nombre, descripcion)
+    auditoria_repository.registrar(
+        id_actor, "CREAR", "categorias", id_categoria, f"Categoría: {nombre}"
+    )
     return Categoria(
         id_categoria=id_categoria,
         nombre=nombre,
@@ -41,15 +47,24 @@ def actualizar_categoria(
     nombre: str,
     descripcion: str | None,
     activo: bool | None,
+    id_actor: int | None = None,
 ) -> Categoria:
     """Actualiza una categoría y devuelve su estado final.
 
     Si ``activo`` es None, el estado no cambia (no se reactiva sola).
     """
     actualizar_categoria_repositorio(id_categoria, nombre, descripcion, activo)
+    auditoria_repository.registrar(
+        id_actor, "ACTUALIZAR", "categorias", id_categoria, f"Categoría: {nombre}"
+    )
     return obtener_categoria(id_categoria)
 
 
-def desactivar_categoria(id_categoria: int) -> None:
+def desactivar_categoria(
+    id_categoria: int, id_actor: int | None = None
+) -> None:
     """Desactiva una categoría (eliminación lógica, idempotente)."""
     desactivar_categoria_repositorio(id_categoria)
+    auditoria_repository.registrar(
+        id_actor, "DESACTIVAR", "categorias", id_categoria
+    )

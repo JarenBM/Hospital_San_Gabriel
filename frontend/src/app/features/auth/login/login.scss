@@ -1,0 +1,238 @@
+/* ============================================================
+   Login — panel de marca + formulario
+   ============================================================ */
+
+.login {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100dvh;
+  background-color: var(--sigih-superficie);
+}
+
+/* ---------- Panel de marca ---------- */
+
+.login__marca {
+  position: relative;
+  display: none;
+  overflow: hidden;
+  padding: 3rem;
+  color: #effcfa;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgb(29 127 212 / 45%) 0%, transparent 55%),
+    linear-gradient(150deg, #073f3f 0%, #0b5f5f 55%, #0d7373 100%);
+}
+
+.login__marca::after {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+  background-size: 46px 46px;
+  content: '';
+  mask-image: radial-gradient(75% 80% at 70% 15%, #000 0%, transparent 78%);
+  pointer-events: none;
+}
+
+.login__marca-contenido {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.login__eyebrow {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  background-color: rgb(255 255 255 / 10%);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.login__titulo {
+  margin: 1.2rem 0 0.9rem;
+  font-size: clamp(2.1rem, 3.6vw, 3rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.login__titulo span {
+  display: block;
+  color: #a9f0e6;
+}
+
+.login__bajada {
+  max-width: 30rem;
+  margin-bottom: 1.9rem;
+  color: rgb(233 250 250 / 80%);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.login__beneficios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.login__beneficios li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.login__beneficios i {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.65rem;
+  background-color: rgb(255 255 255 / 12%);
+  color: #b8f4ea;
+  font-size: 1.05rem;
+}
+
+.login__beneficios strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.login__beneficios span {
+  color: rgb(233 250 250 / 65%);
+  font-size: 0.8rem;
+}
+
+.login__nota {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: rgb(233 250 250 / 55%);
+  font-size: 0.76rem;
+}
+
+/* ---------- Panel del formulario ---------- */
+
+.login__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(80% 60% at 100% 100%, rgb(15 110 110 / 8%) 0%, transparent 60%),
+    var(--sigih-superficie);
+}
+
+.login__tarjeta {
+  width: 100%;
+  max-width: 26rem;
+  border-top: 4px solid var(--sigih-primario);
+  box-shadow: 0 18px 44px rgb(16 42 54 / 10%);
+}
+
+.login__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.4rem;
+}
+
+.login__logo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 0.8rem;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.35rem;
+}
+
+.login__form-titulo {
+  margin: 0;
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.login__form-sub {
+  margin: 0.1rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.8rem;
+}
+
+.login .input-group-text {
+  border-color: var(--sigih-borde);
+  background-color: var(--sigih-superficie);
+  color: var(--sigih-texto-suave);
+}
+
+.login__ojo {
+  --bs-btn-color: var(--sigih-texto-suave);
+  --bs-btn-border-color: var(--sigih-borde);
+  --bs-btn-hover-bg: var(--sigih-primario-claro);
+  --bs-btn-hover-border-color: var(--sigih-primario);
+  --bs-btn-hover-color: var(--sigih-primario-oscuro);
+}
+
+.login__enviar {
+  margin-top: 0.4rem;
+  font-weight: 600;
+}
+
+.login__ayuda {
+  margin: 1.25rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.login__pie {
+  margin: 1.5rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (min-width: 992px) {
+  .login {
+    grid-template-columns: 1.15fr 1fr;
+  }
+
+  .login__marca {
+    display: flex;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .login__panel {
+    padding: 1.25rem 1rem;
+  }
+
+  .login__tarjeta .card-body {
+    padding: 1.5rem 1.15rem !important;
+  }
+}

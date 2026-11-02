@@ -1,4 +1,9 @@
-"""Apertura y cierre de conexiones a SQL Server mediante pyodbc."""
+"""Apertura y cierre de conexiones a SQL Server mediante pyodbc.
+
+La conexión usa el usuario de aplicación ``sigih_app`` configurado en
+``.env`` (DB_USER/DB_PASSWORD). Ese usuario solo tiene GRANT EXECUTE sobre el
+esquema dbo y DENY de DML directo: todo el acceso pasa por stored procedures.
+"""
 
 from collections.abc import Iterator
 from contextlib import contextmanager
