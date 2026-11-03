@@ -45,6 +45,7 @@ import type {
   UsuarioPassword,
   UsuarioRol,
 } from '../../models';
+import { environment } from '../../../environments/environment';
 import { normalizarErrorHttp } from '../utils/api-error';
 import { SessionStore } from './session-store';
 
@@ -124,7 +125,7 @@ export class Recurso<T> {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly base = '/api';
+  private readonly base = environment.apiUrl;
 
   readonly sesion = inject(SessionStore);
 
