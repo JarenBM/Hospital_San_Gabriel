@@ -169,7 +169,8 @@ Sin Git: copie la carpeta completa del proyecto (sin `node_modules`, sin `.venv`
 
 ```text
 Hospital_San_Gabriel/
-├── database/                  # 19 scripts .sql (00–17 + 99)
+├── database/                  # scripts SQL (00–17 + 99)
+│   ├── INSTALAR_SIGIH.sql     # ⭐ instalación completa en un solo archivo
 │   ├── 00_crear_base.sql
 │   ├── ...
 │   ├── 17_permisos_app.sql
@@ -190,7 +191,28 @@ Hospital_San_Gabriel/
 
 ## 4. Configuración y ejecución de la base de datos
 
-### 4.1 Orden estricto de ejecución
+### 4.1 Instalación rápida: un solo archivo
+
+Para compartir el proyecto con un compañero **no es necesario ejecutar los 19 scripts uno por uno**. El archivo **`database/INSTALAR_SIGIH.sql`** contiene todo el proceso en orden: creación de la base, tablas, RBAC, stored procedures, catálogos, roles, administrador, login `sigih_app` y la verificación final.
+
+**En SSMS**
+
+1. Conéctese a `.\SQLEXPRESS` con *Windows Authentication*.
+2. Abra `database/INSTALAR_SIGIH.sql` y pulse **F5**.
+3. Revise **Messages**: debe terminar con `INSTALACIÓN SIGIH FINALIZADA` y no mostrar errores en rojo.
+
+**Con sqlcmd**
+
+```powershell
+cd C:\SIGIH\Hospital_San_Gabriel
+sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
+```
+
+> **Contraseña de `sigih_app`:** el archivo define `DECLARE @password NVARCHAR(128) = N'Sigih.App.2026!';`. Debe coincidir con `DB_PASSWORD` de `backend/.env`. Si la base ya existía, ejecutar el archivo cambia esa contraseña: ajuste la línea antes de ejecutarlo.
+>
+> El archivo es **idempotente** y no borra datos. Los pasos 4.2 a 4.5 describen la ejecución individual de los scripts, útil para mantenimiento o para entender el orden.
+
+### 4.2 Orden estricto de ejecución
 
 La carpeta `database/` contiene **19 scripts**: los **18 de construcción** (`00` a `17`) y el **`99` de verificación**. Deben ejecutarse **exactamente en este orden**; cada bloque depende del anterior.
 
@@ -216,20 +238,20 @@ La carpeta `database/` contiene **19 scripts**: los **18 de construcción** (`00
 | 18 | `17_permisos_app.sql` | Login/usuario `sigih_app` con permisos mínimos |
 | 19 | `99_verificar.sql` | **Solo lectura**: comprueba la instalación |
 
-> **Regla de oro:** no ejecute `99_verificar.sql` hasta haber ejecutado `00`–`17`. El script `17` es el único que requiere una variable (`APP_PASSWORD`), explicada en el paso 4.3.
+> **Regla de oro:** no ejecute `99_verificar.sql` hasta haber ejecutado `00`–`17`. El script `17` es el único que requiere una variable (`APP_PASSWORD`), explicada en el paso 4.4.
 
-### 4.2 Opción A — Ejecución secuencial en SSMS
+### 4.3 Opción A — Ejecución secuencial en SSMS
 
 1. Abra **SSMS** y conéctese a:
    - **Nombre del servidor:** `.\SQLEXPRESS` (o `localhost` si usa instancia predeterminada).
    - **Autenticación:** *Windows Authentication*.
 2. Cree una carpeta de trabajo y confirme que ve las bases del servidor en el *Object Explorer*.
-3. Para **cada archivo, en el orden de la tabla 4.1**:
+3. Para **cada archivo, en el orden de la tabla 4.2**:
    1. `Archivo → Abrir → Archivo…` (o `Ctrl+O`) y seleccione el `.sql`.
    2. Pulse **Ejecutar** (`F5`).
    3. Revise la pestaña **Messages**: debe ver el `PRINT` de confirmación (por ejemplo `Base de datos SIGIH lista.`) y **ningún mensaje en rojo**.
    4. Cierre la pestaña antes de abrir el siguiente archivo para no confundir resultados.
-4. Al terminar `17_permisos_app.sql`, ejecute `99_verificar.sql` y compare la salida con el paso 4.4.
+4. Al terminar `17_permisos_app.sql`, ejecute `99_verificar.sql` y compare la salida con el paso 4.5.
 
 > **Codificación de acentos:** los scripts están en UTF-8 y contienen textos como `médico` o `Hospitalización`. Si al abrir un archivo en SSMS ve caracteres corruptos (`mǸdico`, `Ã©`), **no lo ejecute**: use la opción B (`sqlcmd -f 65001`), que fuerza UTF-8 y evita guardar textos corruptos en la base.
 
@@ -252,7 +274,7 @@ La carpeta `database/` contiene **19 scripts**: los **18 de construcción** (`00
 
 > **Anote la contraseña elegida**: debe ser exactamente la misma que `DB_PASSWORD` en `backend/.env` (paso 5.1). Si la cambia después, vuelva a ejecutar el script 17 con el nuevo valor y actualice el `.env`.
 
-### 4.3 Opción B — Ejecución secuencial con `sqlcmd` (recomendada)
+### 4.4 Opción B — Ejecución secuencial con `sqlcmd` (recomendada)
 
 Desde la raíz del proyecto, en PowerShell:
 
@@ -294,7 +316,7 @@ Significado de los parámetros:
 
 > Todos los scripts son **idempotentes** (tablas con `IF OBJECT_ID(...) IS NULL` y procedimientos con `CREATE OR ALTER`), por lo que se pueden volver a ejecutar sin duplicar datos.
 
-### 4.4 Validación de la base de datos
+### 4.5 Validación de la base de datos
 
 1. Confirme que la base existe:
 
@@ -503,7 +525,7 @@ Ejecute las comprobaciones en orden. No continúe a la siguiente capa si la ante
 | 1 | SQL Server | Servicio activo | `Get-Service *MSSQL*` | `Running` |
 | 2 | SQL Server | Conexión | `sqlcmd -S .\SQLEXPRESS -E -C -Q "SELECT 1"` | Devuelve `1` |
 | 3 | SQL Server | Base creada | `SELECT name FROM sys.databases WHERE name='SIGIH'` | Una fila: `SIGIH` |
-| 4 | SQL Server | Modelo completo | Ejecutar `99_verificar.sql` | 11 tablas, SPs, 3 roles, `sigih_app`, admin |
+| 4 | SQL Server | Modelo completo | Ejecutar `INSTALAR_SIGIH.sql` (incluye `99`) o `99_verificar.sql` | 11 tablas, 71 SPs, 3 roles, `sigih_app`, admin |
 | 5 | Backend | Dependencias | `uv sync` | `Resolved ...` / `Installed ...` sin errores |
 | 6 | Backend | Arranque | `uv run uvicorn src.backend.main:app` | `Uvicorn running on http://127.0.0.1:8000` |
 | 7 | Backend | Swagger | Abrir `http://127.0.0.1:8000/docs` | Swagger UI con todos los routers |
@@ -538,7 +560,7 @@ Si los 7 pasos funcionan, las tres capas están correctamente conectadas.
 | `RuntimeError: JWT_SECRET falta en .env...` | Secreto ausente o de menos de 32 caracteres | Generar con `uv run python -c "import secrets; print(secrets.token_urlsafe(48))"` |
 | `pyodbc.Error: ('IM002', ...)` | Falta el ODBC Driver 18 | Instalar el controlador (paso 2.6) |
 | `Login failed for user 'sigih_app'` | `DB_PASSWORD` distinto del `APP_PASSWORD` del script 17 | Reejecutar `17_permisos_app.sql` con la misma clave y actualizar `.env` |
-| Error `51801` al ejecutar el script 17 | Falta `APP_PASSWORD` o el modo SQLCMD | Ver paso 4.2 (SSMS) o usar `sqlcmd -v` (paso 4.3) |
+| Error `51801` al ejecutar el script 17 | Falta `APP_PASSWORD` o el modo SQLCMD | Ver paso 4.3 (SSMS) o usar `sqlcmd -v` (paso 4.4) |
 | Acentos corruptos (`mǸdico`) en la base | Scripts leídos sin UTF-8 | Volver a ejecutar con `sqlcmd ... -f 65001` |
 | `Cannot read properties of null (reading 'edgesOut')` | Bug de npm 10.9.3 con Vitest | `npx --yes npm@11 install` |
 | `'ng' no se reconoce...` | Angular CLI no está global | Usar `npm start` o `npx ng serve` |
@@ -558,10 +580,15 @@ Si los 7 pasos funcionan, las tres capas están correctamente conectadas.
 ```powershell
 # 1) Base de datos (desde la raíz del proyecto)
 cd C:\SIGIH\Hospital_San_Gabriel
-sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\00_crear_base.sql
+
+# Opción rápida: un solo archivo (incluye 00 a 17 y la verificación 99)
+sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
+
+# Opción detallada: ejecutar 00 a 17 en orden y luego 99
+# sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\00_crear_base.sql
 # ... ejecutar 01 a 16 en orden ...
-sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="Sigih.App.2026!"
-sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
+# sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="Sigih.App.2026!"
+# sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 
 # 2) Backend (terminal 1)
 cd C:\SIGIH\Hospital_San_Gabriel\backend

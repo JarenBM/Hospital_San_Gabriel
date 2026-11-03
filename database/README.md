@@ -4,6 +4,35 @@ Scripts idempotentes para SQL Server 2017+ (probado en SQL Server 2025 Express).
 Se pueden ejecutar varias veces: las tablas usan `IF OBJECT_ID(...) IS NULL` y
 los procedimientos `CREATE OR ALTER`.
 
+## Instalación rápida (un solo archivo)
+
+Para un equipo nuevo **no hace falta ejecutar los 19 scripts uno por uno**. El
+archivo **`INSTALAR_SIGIH.sql`** contiene todo el proceso en orden: creación de
+la base, tablas, RBAC, stored procedures, catálogos, roles, administrador, login
+`sigih_app` y la verificación final.
+
+**SSMS**
+
+1. Conéctese a `.\SQLEXPRESS` con autenticación de Windows.
+2. Abra `INSTALAR_SIGIH.sql` y pulse **F5**.
+3. Revise la pestaña **Mensajes**: debe terminar con `INSTALACIÓN SIGIH FINALIZADA`
+   y no mostrar errores en rojo.
+
+**sqlcmd**
+
+```powershell
+cd C:\ruta\del\proyecto
+sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
+```
+
+> **Contraseña de `sigih_app`:** el archivo define
+> `DECLARE @password NVARCHAR(128) = N'Sigih.App.2026!';`. Debe coincidir con
+> `DB_PASSWORD` de `backend/.env`. Si la base ya existía, ejecutar el archivo
+> cambia la contraseña del login: ajuste esa línea antes de ejecutarlo.
+>
+> El archivo es **idempotente**, no borra datos y ya incluye `99_verificar.sql`
+> al final. Los scripts individuales se mantienen para mantenimiento y estudio.
+
 ## Orden de ejecución
 
 ```powershell
