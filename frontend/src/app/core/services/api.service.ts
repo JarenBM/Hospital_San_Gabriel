@@ -593,6 +593,19 @@ export class ApiService {
     );
   }
 
+  /**
+   * Consulta movimientos sin modificar la caché compartida ni los filtros
+   * recordados. La usa el kardex de reportes para no alterar la página de
+   * movimientos.
+   */
+  consultarMovimientos(filtros: FiltrosMovimiento): Observable<MovimientoListado[]> {
+    return this.ejecutar(
+      this.http.get<MovimientoListado[]>(`${this.base}/movimientos`, {
+        params: this.parametros(filtros),
+      }),
+    );
+  }
+
   registrarEntrada(datos: EntradaCrear): Observable<EntradaRegistrada> {
     return this.ejecutar(
       this.http.post<EntradaRegistrada>(`${this.base}/movimientos/entradas`, datos),

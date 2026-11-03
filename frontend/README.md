@@ -61,26 +61,42 @@ src/app/
 │   │   └── guest.guard.ts         # aleja a los autenticados de /login
 │   ├── interceptors/
 │   │   ├── auth.interceptor.ts    # Authorization: Bearer <token>
+│   │   ├── carga.interceptor.ts   # barra global de carga
 │   │   └── error.interceptor.ts   # 401/403/409/422/5xx → ApiError + notificación
 │   ├── services/
 │   │   ├── api.service.ts         # fachada HTTP + estado reactivo (Recurso<T>)
 │   │   ├── auth.service.ts        # login, logout, permisos y rol en signals
+│   │   ├── carga-global.service.ts # contador de peticiones en curso
+│   │   ├── confirmacion.service.ts # confirmaciones modales con Promise<boolean>
+│   │   ├── toast.service.ts       # toasts de Bootstrap
 │   │   ├── session-store.ts       # token y usuario en signals
 │   │   ├── notificacion.service.ts
 │   │   └── token-storage.ts       # persistencia en localStorage
 │   └── utils/
 │       ├── api-error.ts           # normalización de errores HTTP
+│       ├── errores.ts             # ApiError → mensaje/detalle para toasts
 │       └── formato.ts             # moneda, números y fechas es-PE
 ├── features/
 │   ├── auth/login/                # formulario de inicio de sesión
-│   ├── dashboard/                 # resumen del inventario
+│   ├── dashboard/                 # widgets, métricas y listas de alertas
+│   ├── productos/                 # catálogo, filtros y CRUD
+│   ├── categorias/                # CRUD de categorías
+│   ├── lotes/                     # existencias por producto/lote
+│   ├── movimientos/               # historial, entradas y salidas
+│   ├── areas/                     # CRUD de áreas hospitalarias
+│   ├── alertas/                   # stock bajo, por vencer y vencidos
+│   ├── reportes/                  # kardex y mayores salidas
+│   ├── usuarios/                  # cuentas, roles y contraseñas
+│   ├── roles/                     # roles y matriz de permisos
 │   ├── errors/forbidden/          # 403
-│   ├── errors/not-found/          # 404
-│   └── modulos/                   # marcador "en construcción" por módulo
+│   └── errors/not-found/          # 404
 ├── models/                        # contratos espejo de los schemas Pydantic
-├── shared/components/layout/
-│   ├── shell.ts|html|scss         # navbar + sidebar responsive
-│   └── navegacion.ts              # catálogo de rutas, iconos y permisos
+├── shared/components/
+│   ├── feedback/                  # carga global, toasts y confirmación
+│   ├── layout/
+│   │   ├── shell.ts|html|scss     # navbar + sidebar responsive
+│   │   └── navegacion.ts          # catálogo de rutas, iconos y permisos
+│   └── modal/                     # envoltorio reutilizable de modal Bootstrap
 ├── app.config.ts                  # providers, interceptores y restauración de sesión
 └── app.routes.ts                  # rutas lazy con guards
 ```
@@ -128,6 +144,9 @@ inventario visible en memoria.
 
 - **`authInterceptor`**: añade `Authorization: Bearer <token>` a toda petición
   `/api`, excepto el login.
+- **`cargaInterceptor`**: incrementa un contador global mientras hay peticiones en
+  curso; `<app-carga-global />` muestra una barra superior hasta que termina la
+  última.
 - **`errorInterceptor`**: normaliza la respuesta a `ApiError` y notifica:
   - `401` → cierra la sesión (salvo credenciales inválidas en el login) y
     redirige a `/login?returnUrl=...` para volver a la pantalla solicitada.
@@ -186,17 +205,41 @@ sidebar responsive. Las opciones se filtran con `computed()` sobre
 `AuthService.permisosMap`, de modo que desaparecen al cambiar de usuario. El
 catálogo vive en `shared/components/layout/navegacion.ts`.
 
-Los módulos aún no implementados (productos, lotes, movimientos, reportes,
-usuarios, roles...) reutilizan `ModuloPendiente` con `titulo`, `descripcion` e
-`icono` recibidos por `withComponentInputBinding`. `/403` y `/404` son páginas
+Cada módulo se carga de forma diferida y declara su permiso en `data`; `roleGuard`
+responde `/403` si el usuario no lo tiene. `/403` y `/404` son páginas
 independientes; cualquier URL desconocida termina en `/404`.
+
+## Estado, formularios y feedback
+
+Las páginas usan **signals** de Angular en lugar de `ReactiveFormsModule`:
+
+- Un `signal()` por campo y un `computed()` por error síncrono.
+- Un `computed()` adicional (`formularioValido`) habilita el botón de guardado.
+- Los listados filtran con `computed()` sobre la búsqueda, categoría, estado,
+  tipo de movimiento o rango de fechas.
+- El dashboard deriva sus widgets y listas del resumen y las alertas.
+
+Servicios compartidos:
+
+| Servicio / componente | Uso |
+| --- | --- |
+| `CargaGlobalService` + `<app-carga-global />` | Barra superior mientras hay peticiones (`isLoading`). |
+| `ToastService` + `<app-toasts />` | Toasts Bootstrap de éxito, error, advertencia e info. |
+| `ConfirmacionService` + `<app-confirm-dialog />` | `await confirmar({...})` antes de desactivar. |
+| `<app-modal />` | Envoltorio de modal con `titulo`, `subtitulo`, `tamano` y `cerrar`. |
+
+Los errores HTTP se convierten con `describirError(error)` para mostrar el
+mensaje del backend (incluidos `409` y `422`) tanto en un toast como en el
+formulario. Las escrituras respetan `AuthService.tienePermiso(...)` y las
+confirmaciones destructivas nunca se ejecutan sin aceptación explícita.
 
 ## Estilos
 
 Bootstrap 5.3 y Bootstrap Icons se cargan globalmente desde `angular.json`.
 `src/styles.scss` define la paleta SIGIH (variables `--sigih-*`), utilidades
-(`.sigih-card`, `.sigih-tabla`, `.sigih-badge-permiso`) y los ajustes de foco y
-accesibilidad.
+(`.sigih-card`, `.sigih-tabla`, `.sigih-badge-permiso`, `.sigih-pagina`,
+`.sigih-filtros`, `.sigih-tabs`, `.sigih-vacio`, `.sigih-form-error`...) y los
+ajustes de foco y accesibilidad.
 
 ## Notas de desarrollo
 
@@ -205,5 +248,6 @@ accesibilidad.
 - El login usa **Signal Forms** (`@angular/forms/signals`), experimental en
   Angular 21; el modelo, la carga y el error son signals.
 - La paginación de listados queda diferida a la siguiente fase del frontend.
-- Los módulos sin implementar muestran la página "En construcción" descrita
-  arriba; no son enlaces muertos.
+- El stock de lotes solo cambia con entradas y salidas; no existe CRUD de lotes.
+- Los productos no se pueden reactivar desde la API; las categorías, áreas, roles
+  y usuarios sí (`activo: true` en la actualización).

@@ -1,0 +1,22 @@
+<div class="toasts" aria-live="polite" aria-atomic="true">
+  @for (toast of toasts.toasts(); track toast.id) {
+    <div class="toast show sigih-toast" [class]="'toast show sigih-toast sigih-toast--' + toast.tipo" role="alert">
+      <div class="toast-header">
+        <i class="bi {{ icono(toast.tipo) }} sigih-toast__icono" aria-hidden="true"></i>
+        <strong class="me-auto">{{ titulo(toast.tipo) }}</strong>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Cerrar notificación"
+          (click)="descartar(toast.id)"
+        ></button>
+      </div>
+      <div class="toast-body">
+        <span class="d-block">{{ toast.mensaje }}</span>
+        @if (toast.detalle) {
+          <span class="sigih-toast__detalle">{{ toast.detalle }}</span>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,30 @@
+.movimientos__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.movimientos__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.movimientos__motivo {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movimientos__stock {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lotes__separador {
+  margin: 0 0.15rem;
+  color: var(--sigih-texto-suave);
+}

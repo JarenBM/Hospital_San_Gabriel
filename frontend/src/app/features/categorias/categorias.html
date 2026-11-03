@@ -1,0 +1,282 @@
+<section class="sigih-pagina categorias">
+  <!-- ===================== Cabecera ===================== -->
+  <header class="categorias__cabecera">
+    <div class="categorias__titulo-grupo">
+      <span class="categorias__icono" aria-hidden="true">
+        <i class="bi bi-tags"></i>
+      </span>
+      <div>
+        <h1 class="h4 sigih-titulo mb-1">Categorías</h1>
+        <p class="categorias__subtitulo mb-0">
+          Agrupación y clasificación de los productos del inventario.
+        </p>
+      </div>
+    </div>
+
+    @if (puedeEscribir()) {
+      <button type="button" class="btn btn-primary" (click)="abrirCrear()">
+        <i class="bi bi-plus-lg me-1"></i>
+        Nueva categoría
+      </button>
+    }
+  </header>
+
+  <!-- ===================== Filtros ===================== -->
+  <div class="card sigih-card">
+    <div class="card-body">
+      <div class="sigih-filtros">
+        <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+          <label for="categoria-filtro-busqueda" class="form-label">Buscar</label>
+          <div class="input-group">
+            <span class="input-group-text" aria-hidden="true">
+              <i class="bi bi-search"></i>
+            </span>
+            <input
+              id="categoria-filtro-busqueda"
+              type="search"
+              class="form-control"
+              placeholder="Nombre o descripción"
+              [value]="filtroBusqueda()"
+              (input)="cambiarFiltroBusqueda($event)"
+            />
+          </div>
+        </div>
+
+        <div class="sigih-filtros__campo">
+          <label for="categoria-filtro-estado" class="form-label">Estado</label>
+          <select
+            id="categoria-filtro-estado"
+            class="form-select"
+            [value]="filtroEstado()"
+            (change)="cambiarFiltroEstado($event)"
+          >
+            <option value="todos">Todas</option>
+            <option value="activos">Activas</option>
+            <option value="inactivos">Inactivas</option>
+          </select>
+        </div>
+
+        @if (hayFiltros()) {
+          <div class="sigih-filtros__campo categorias__limpiar">
+            <button
+              type="button"
+              class="btn btn-outline-secondary w-100"
+              (click)="limpiarFiltros()"
+            >
+              <i class="bi bi-eraser me-1"></i>
+              Limpiar
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== Listado ===================== -->
+  <div class="card sigih-card">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <span class="sigih-contador">
+          {{ categoriasFiltradas().length }} de {{ categorias.datos().length }} categorías
+        </span>
+        @if (categorias.cargando() && categorias.datos().length > 0) {
+          <span class="sigih-contador">
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            Actualizando…
+          </span>
+        }
+      </div>
+
+      @if (categorias.error(); as error) {
+        <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+          <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+          <div class="flex-grow-1">
+            <strong class="d-block">No se pudieron cargar las categorías</strong>
+            <span class="small">{{ error.mensaje }}</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="recargarCategorias()">
+            Reintentar
+          </button>
+        </div>
+      }
+
+      @if (cargandoInicial()) {
+        <div class="categorias__carga">
+          <span class="spinner-border text-primary" role="status" aria-hidden="true"></span>
+          <p class="sigih-contador mb-0">Cargando categorías…</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle sigih-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Estado</th>
+                @if (puedeEscribir()) {
+                  <th scope="col" class="text-end">Acciones</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @if (categoriasFiltradas().length === 0) {
+                <tr>
+                  <td [attr.colspan]="puedeEscribir() ? 4 : 3">
+                    <div class="sigih-vacio">
+                      <i class="bi bi-tags"></i>
+                      @if (categorias.datos().length === 0) {
+                        <strong>Aún no hay categorías registradas</strong>
+                        <span>
+                          Cree la primera categoría para organizar los productos.
+                        </span>
+                      } @else {
+                        <strong>Sin resultados</strong>
+                        <span>Ajuste la búsqueda o los filtros seleccionados.</span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @else {
+                @for (categoria of categoriasFiltradas(); track categoria.id_categoria) {
+                  <tr>
+                    <td>
+                      <span class="categorias__nombre">{{ categoria.nombre }}</span>
+                    </td>
+                    <td>
+                      <span class="categorias__descripcion">
+                        {{ categoria.descripcion || 'Sin descripción' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span [class]="claseEstado(categoria.activo)">
+                        {{ categoria.activo ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </td>
+                    @if (puedeEscribir()) {
+                      <td class="text-end">
+                        <div class="sigih-tabla-acciones">
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            title="Editar categoría"
+                            [attr.aria-label]="'Editar ' + categoria.nombre"
+                            (click)="abrirEditar(categoria)"
+                          >
+                            <i class="bi bi-pencil"></i>
+                          </button>
+
+                          @if (categoria.activo) {
+                            <button
+                              type="button"
+                              class="btn btn-outline-danger"
+                              title="Desactivar categoría"
+                              [attr.aria-label]="'Desactivar ' + categoria.nombre"
+                              (click)="desactivar(categoria)"
+                            >
+                              <i class="bi bi-slash-circle"></i>
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn btn-outline-success"
+                              title="Reactivar categoría"
+                              [attr.aria-label]="'Reactivar ' + categoria.nombre"
+                              [disabled]="reactivandoId() === categoria.id_categoria"
+                              (click)="reactivar(categoria)"
+                            >
+                              @if (reactivandoId() === categoria.id_categoria) {
+                                <span
+                                  class="spinner-border spinner-border-sm"
+                                  aria-hidden="true"
+                                ></span>
+                              } @else {
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                              }
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    }
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Modal alta / edición ===================== -->
+@if (modalAbierto()) {
+  <app-modal [titulo]="tituloModal()" [tamano]="'lg'" (cerrar)="cerrarModal()">
+    <form id="form-categoria" (submit)="guardar($event)" novalidate>
+      @if (errorModal(); as error) {
+        <div class="alert alert-danger d-flex align-items-start gap-2 py-2 px-3 small" role="alert">
+          <i class="bi bi-exclamation-octagon flex-shrink-0"></i>
+          <span>{{ error }}</span>
+        </div>
+      }
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="categoria-nombre" class="form-label">Nombre</label>
+          <input
+            id="categoria-nombre"
+            type="text"
+            class="form-control"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Ej. Material médico"
+            [value]="nombre()"
+            [class.is-invalid]="intentado() && errorNombre() !== null"
+            (input)="cambiarNombre($event)"
+          />
+          @if (intentado() && errorNombre()) {
+            <div class="sigih-form-error">{{ errorNombre() }}</div>
+          }
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-end">
+            <label for="categoria-descripcion" class="form-label mb-0">
+              Descripción <span class="sigih-contador">(opcional)</span>
+            </label>
+            <span class="sigih-contador">{{ descripcion().length }}/255</span>
+          </div>
+          <textarea
+            id="categoria-descripcion"
+            class="form-control"
+            rows="3"
+            maxlength="255"
+            placeholder="Uso o alcance de la categoría"
+            [value]="descripcion()"
+            [class.is-invalid]="intentado() && errorDescripcion() !== null"
+            (input)="cambiarDescripcion($event)"
+          ></textarea>
+          @if (intentado() && errorDescripcion()) {
+            <div class="sigih-form-error">{{ errorDescripcion() }}</div>
+          }
+        </div>
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        [disabled]="guardando()"
+        (click)="cerrarModal()"
+      >
+        Cancelar
+      </button>
+      <button type="submit" form="form-categoria" class="btn btn-primary" [disabled]="guardando()">
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        }
+        {{ esEdicion() ? 'Guardar cambios' : 'Crear categoría' }}
+      </button>
+    </div>
+  </app-modal>
+}

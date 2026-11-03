@@ -1,0 +1,29 @@
+<div class="modal d-block sigih-modal" tabindex="-1" role="dialog" aria-modal="true" (click)="alCerrar()">
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+    [class]="'modal-dialog modal-dialog-centered modal-dialog-scrollable modal-' + tamano()"
+    role="document"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="min-w-0">
+          <h2 class="modal-title sigih-modal__titulo">{{ titulo() }}</h2>
+          @if (subtitulo()) {
+            <p class="sigih-modal__subtitulo mb-0">{{ subtitulo() }}</p>
+          }
+        </div>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="alCerrar()"></button>
+      </div>
+
+      <div class="modal-body">
+        <ng-content />
+      </div>
+
+      <div class="modal-footer">
+        <ng-content select="[modalPie]" />
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop show"></div>

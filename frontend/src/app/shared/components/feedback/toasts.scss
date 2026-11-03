@@ -1,0 +1,80 @@
+.toasts {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(23rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.sigih-toast {
+  overflow: hidden;
+  border: 1px solid var(--sigih-borde);
+  border-left-width: 4px;
+  border-radius: 0.75rem;
+  background-color: #fff;
+  box-shadow: 0 14px 34px rgb(16 42 54 / 18%);
+  pointer-events: auto;
+}
+
+.sigih-toast--exito {
+  border-left-color: #16835a;
+}
+
+.sigih-toast--error {
+  border-left-color: #c43c3c;
+}
+
+.sigih-toast--advertencia {
+  border-left-color: #b5760b;
+}
+
+.sigih-toast--info {
+  border-left-color: var(--sigih-acento);
+}
+
+.sigih-toast .toast-header {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--sigih-borde);
+  background-color: #fff;
+  font-size: 0.82rem;
+}
+
+.sigih-toast__icono {
+  margin-right: 0.45rem;
+  font-size: 1rem;
+}
+
+.sigih-toast--exito .sigih-toast__icono {
+  color: #16835a;
+}
+
+.sigih-toast--error .sigih-toast__icono {
+  color: #c43c3c;
+}
+
+.sigih-toast--advertencia .sigih-toast__icono {
+  color: #b5760b;
+}
+
+.sigih-toast--info .sigih-toast__icono {
+  color: var(--sigih-acento);
+}
+
+.sigih-toast .toast-body {
+  padding: 0.65rem 0.75rem;
+  color: var(--sigih-texto);
+  font-size: 0.82rem;
+}
+
+.sigih-toast__detalle {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  word-break: break-word;
+}

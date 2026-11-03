@@ -1,0 +1,31 @@
+/* ============================================================
+   Usuarios
+   ============================================================ */
+
+.usuarios__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-width: 22rem;
+}
+
+.usuarios__roles-lista {
+  --bs-list-group-border-color: var(--sigih-borde);
+}
+
+.usuarios__permisos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sigih-filtros__campo--auto {
+  flex: 0 0 auto;
+  min-width: auto;
+}
+
+@media (max-width: 575.98px) {
+  .usuarios__roles {
+    max-width: none;
+  }
+}

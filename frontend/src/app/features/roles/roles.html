@@ -1,0 +1,330 @@
+<section class="sigih-pagina">
+  <header class="d-flex flex-wrap align-items-end justify-content-between gap-2">
+    <div>
+      <h2 class="sigih-titulo h5 mb-1">Roles y permisos</h2>
+      <p class="sigih-contador mb-0">
+        {{ rolesFiltrados().length }} de {{ roles.datos().length }} roles
+      </p>
+    </div>
+    @if (puedeGestionar()) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="abrirAlta()">
+        <i class="bi bi-shield-plus me-1"></i>
+        Nuevo rol
+      </button>
+    }
+  </header>
+
+  @if (roles.error(); as error) {
+    <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+      <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+      <div>
+        <strong class="d-block">No se pudo cargar la lista de roles</strong>
+        <span class="small">{{ error.mensaje }}</span>
+        @if (error.detalle) {
+          <span class="small d-block">{{ error.detalle }}</span>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="card sigih-card">
+    <div class="card-body">
+      <div class="sigih-filtros">
+        <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+          <label class="form-label" for="filtroRoles">Buscar</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text" aria-hidden="true">
+              <i class="bi bi-search"></i>
+            </span>
+            <input
+              id="filtroRoles"
+              #campoBusqueda
+              type="search"
+              class="form-control"
+              placeholder="Nombre o descripción"
+              [value]="busqueda()"
+              (input)="busqueda.set(campoBusqueda.value)"
+            />
+          </div>
+        </div>
+
+        <div class="sigih-filtros__campo">
+          <label class="form-label" for="filtroEstadoRoles">Estado</label>
+          <select
+            id="filtroEstadoRoles"
+            class="form-select form-select-sm"
+            (change)="cambiarEstado($event)"
+          >
+            <option value="todos" [selected]="filtroEstado() === 'todos'">Todos</option>
+            <option value="activos" [selected]="filtroEstado() === 'activos'">Activos</option>
+            <option value="inactivos" [selected]="filtroEstado() === 'inactivos'">
+              Inactivos
+            </option>
+          </select>
+        </div>
+
+        <div class="sigih-filtros__campo sigih-filtros__campo--auto">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()">
+            <i class="bi bi-x-circle me-1"></i>
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      @if (roles.cargando() && !roles.cargado()) {
+        <div class="sigih-vacio">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Cargando roles…</span>
+        </div>
+      } @else if (rolesFiltrados().length === 0) {
+        <div class="sigih-vacio">
+          <i class="bi bi-shield-lock"></i>
+          <strong>Sin roles para mostrar</strong>
+          <span>
+            @if (roles.datos().length === 0) {
+              Aún no hay roles registrados.
+            } @else {
+              Pruebe con otros criterios de búsqueda.
+            }
+          </span>
+        </div>
+      } @else {
+        <div class="table-responsive mt-3">
+          <table class="table table-hover align-middle sigih-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Rol</th>
+                <th scope="col">Descripción</th>
+                <th scope="col" class="text-center">Permisos</th>
+                <th scope="col">Estado</th>
+                @if (puedeGestionar()) {
+                  <th scope="col" class="text-end">Acciones</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (rol of rolesFiltrados(); track rol.id_rol) {
+                <tr>
+                  <td>
+                    <strong>{{ rol.nombre }}</strong>
+                  </td>
+                  <td class="sigih-texto-suave small roles__descripcion">
+                    {{ rol.descripcion || 'Sin descripción' }}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge rounded-pill text-bg-primary">
+                      {{ rol.total_permisos }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (rol.activo) {
+                      <span class="badge text-bg-success">Activo</span>
+                    } @else {
+                      <span class="badge text-bg-secondary">Inactivo</span>
+                    }
+                  </td>
+                  @if (puedeGestionar()) {
+                    <td>
+                      <div class="sigih-tabla-acciones">
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          title="Editar rol"
+                          (click)="abrirEdicion(rol)"
+                        >
+                          <i class="bi bi-pencil"></i>
+                          <span class="d-none d-xl-inline ms-1">Editar</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-primary"
+                          title="Administrar permisos"
+                          (click)="abrirPermisos(rol)"
+                        >
+                          <i class="bi bi-sliders"></i>
+                          <span class="d-none d-xl-inline ms-1">Permisos</span>
+                        </button>
+                        @if (rol.activo) {
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger"
+                            title="Desactivar rol"
+                            (click)="desactivar(rol)"
+                          >
+                            <i class="bi bi-shield-slash"></i>
+                            <span class="d-none d-xl-inline ms-1">Desactivar</span>
+                          </button>
+                        } @else {
+                          <button
+                            type="button"
+                            class="btn btn-outline-success"
+                            title="Reactivar rol"
+                            (click)="reactivar(rol)"
+                          >
+                            <i class="bi bi-shield-check"></i>
+                            <span class="d-none d-xl-inline ms-1">Reactivar</span>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Alta / edición de rol ===================== -->
+@if (modalFormulario()) {
+  <app-modal
+    [titulo]="tituloModal()"
+    [subtitulo]="
+      rolEditando()
+        ? 'Actualice el nombre o la descripción del rol.'
+        : 'Cree un rol y luego asigne sus permisos.'
+    "
+    tamano="lg"
+    (cerrar)="cerrarFormulario()"
+  >
+    <form (submit)="guardar(); $event.preventDefault()" novalidate>
+      <div class="mb-3">
+        <label class="form-label" for="rolNombre">Nombre</label>
+        <input
+          id="rolNombre"
+          #campoNombre
+          type="text"
+          class="form-control"
+          maxlength="50"
+          autocomplete="off"
+          placeholder="Por ejemplo, ALMACEN"
+          [value]="nombre()"
+          [class.is-invalid]="intentado() && !!errorNombre()"
+          (input)="nombre.set(campoNombre.value)"
+        />
+        @if (intentado() && errorNombre()) {
+          <div class="sigih-form-error">{{ errorNombre() }}</div>
+        }
+      </div>
+
+      <div class="mb-0">
+        <label class="form-label" for="rolDescripcion">Descripción</label>
+        <textarea
+          id="rolDescripcion"
+          #campoDescripcion
+          class="form-control"
+          rows="3"
+          maxlength="255"
+          placeholder="Responsabilidades o alcance del rol"
+          [value]="descripcion()"
+          [class.is-invalid]="intentado() && !!errorDescripcion()"
+          (input)="descripcion.set(campoDescripcion.value)"
+        ></textarea>
+        @if (intentado() && errorDescripcion()) {
+          <div class="sigih-form-error">{{ errorDescripcion() }}</div>
+        }
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarFormulario()">
+        Cancelar
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        }
+        {{ rolEditando() ? 'Guardar cambios' : 'Crear rol' }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- ===================== Permisos del rol ===================== -->
+@if (modalPermisos()) {
+  <app-modal
+    titulo="Permisos del rol"
+    [subtitulo]="rolPermisos()?.nombre ?? ''"
+    tamano="lg"
+    (cerrar)="cerrarPermisos()"
+  >
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <p class="sigih-contador mb-0">
+          {{ totalSeleccionados() }} de {{ totalPermisos() }} permisos
+        </p>
+        <div class="roles__barra mt-1" aria-hidden="true">
+          <span
+            [style.width.%]="
+              totalPermisos() > 0 ? (totalSeleccionados() / totalPermisos()) * 100 : 0
+            "
+          ></span>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="marcarTodos()">
+          <i class="bi bi-check-all me-1"></i>
+          Marcar todos
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="limpiarSeleccion()">
+          <i class="bi bi-x-circle me-1"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    @if (cargandoPermisos()) {
+      <div class="sigih-vacio">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>Cargando permisos del rol…</span>
+      </div>
+    } @else {
+      <div class="roles__permisos">
+        @for (grupo of gruposPermisos(); track grupo.modulo) {
+          <section class="roles__grupo" [attr.aria-label]="'Permisos de ' + grupo.modulo">
+            <h3 class="roles__grupo-titulo">{{ grupo.modulo }}</h3>
+            <div class="roles__grupo-lista">
+              @for (permiso of grupo.permisos; track permiso.codigo) {
+                <div class="form-check roles__opcion">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    [id]="'permiso-' + permiso.codigo"
+                    [checked]="estaSeleccionado(permiso.codigo)"
+                    (change)="alternarPermiso(permiso.codigo)"
+                  />
+                  <label class="form-check-label" [for]="'permiso-' + permiso.codigo">
+                    <span class="roles__codigo">{{ permiso.codigo }}</span>
+                    @if (permiso.descripcion) {
+                      <span class="roles__detalle">{{ permiso.descripcion }}</span>
+                    }
+                  </label>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    }
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarPermisos()">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardandoPermisos() || cargandoPermisos()"
+        (click)="guardarPermisos()"
+      >
+        @if (guardandoPermisos()) {
+          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        }
+        Guardar permisos
+      </button>
+    </div>
+  </app-modal>
+}

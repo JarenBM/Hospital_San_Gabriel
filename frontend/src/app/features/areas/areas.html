@@ -1,0 +1,222 @@
+<section class="sigih-pagina">
+  <header class="areas__encabezado">
+    <div>
+      <h1 class="h4 sigih-titulo mb-1">Áreas</h1>
+      <p class="sigih-texto-suave small mb-0">
+        Áreas hospitalarias que reciben inventario y permiten registrar salidas.
+      </p>
+    </div>
+
+    @if (puedeEscribir()) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="abrirAlta()">
+        <i class="bi bi-plus-lg me-1"></i>
+        Nueva área
+      </button>
+    }
+  </header>
+
+  <div class="card sigih-card">
+    <div class="card-body">
+      <div class="sigih-filtros">
+        <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+          <label class="form-label" for="areas-busqueda">Buscar por nombre</label>
+          <input
+            id="areas-busqueda"
+            type="search"
+            class="form-control"
+            placeholder="Ej. Emergencia"
+            autocomplete="off"
+            [value]="busqueda()"
+            (input)="actualizarBusqueda($event)"
+          />
+        </div>
+
+        <div class="sigih-filtros__campo">
+          <label class="form-label" for="areas-estado">Estado</label>
+          <select
+            id="areas-estado"
+            class="form-select"
+            [value]="filtroEstado()"
+            (change)="actualizarFiltroEstado($event)"
+          >
+            <option value="todos">Todos</option>
+            <option value="activos">Activos</option>
+            <option value="inactivos">Inactivos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (areas.error(); as error) {
+    <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+      <i class="bi bi-exclamation-triangle mt-1"></i>
+      <div class="flex-grow-1">
+        <strong class="d-block">No se pudieron cargar las áreas</strong>
+        <span class="small">{{ error.mensaje }}</span>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="recargar()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <div class="card sigih-card overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle sigih-tabla">
+        <thead>
+          <tr>
+            <th scope="col">Área</th>
+            <th scope="col">Estado</th>
+            @if (puedeEscribir()) {
+              <th scope="col" class="text-end">Acciones</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (area of areasFiltradas(); track area.id_area) {
+            <tr>
+              <td>
+                <span class="areas__nombre">{{ area.nombre }}</span>
+              </td>
+              <td>
+                @if (area.activo) {
+                  <span class="badge text-bg-success">Activo</span>
+                } @else {
+                  <span class="badge text-bg-secondary">Inactivo</span>
+                }
+              </td>
+              @if (puedeEscribir()) {
+                <td>
+                  <div class="sigih-tabla-acciones">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      [disabled]="procesando() === area.id_area"
+                      (click)="abrirEdicion(area)"
+                    >
+                      <i class="bi bi-pencil me-1"></i>
+                      Editar
+                    </button>
+
+                    @if (area.activo) {
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger"
+                        [disabled]="procesando() === area.id_area"
+                        (click)="desactivar(area)"
+                      >
+                        @if (procesando() === area.id_area) {
+                          <span class="spinner-border spinner-border-sm me-1"></span>
+                        } @else {
+                          <i class="bi bi-slash-circle me-1"></i>
+                        }
+                        Desactivar
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-outline-success"
+                        [disabled]="procesando() === area.id_area"
+                        (click)="reactivar(area)"
+                      >
+                        @if (procesando() === area.id_area) {
+                          <span class="spinner-border spinner-border-sm me-1"></span>
+                        } @else {
+                          <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        }
+                        Reactivar
+                      </button>
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="puedeEscribir() ? 3 : 2">
+                <div class="sigih-vacio">
+                  <i class="bi bi-hospital"></i>
+                  @if (hayFiltro()) {
+                    <strong>Sin áreas que coincidan</strong>
+                    <span class="small">Pruebe con otro nombre o cambie el filtro de estado.</span>
+                  } @else {
+                    <strong>No hay áreas registradas</strong>
+                    <span class="small">
+                      @if (puedeEscribir()) {
+                        Registre la primera área con el botón «Nueva área».
+                      } @else {
+                        Aún no se registraron áreas hospitalarias.
+                      }
+                    </span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <p class="sigih-contador mb-0">
+      {{ areasFiltradas().length }} de {{ areas.datos().length }} áreas
+    </p>
+    <p class="sigih-contador mb-0">{{ totalActivas() }} activas</p>
+  </div>
+</section>
+
+@if (modalAbierto()) {
+  <app-modal
+    [titulo]="tituloModal()"
+    [subtitulo]="subtituloModal()"
+    [tamano]="'sm'"
+    (cerrar)="cerrarModal()"
+  >
+    <form (submit)="$event.preventDefault(); guardar()">
+      <label class="form-label" for="area-nombre">Nombre del área</label>
+      <input
+        id="area-nombre"
+        type="text"
+        class="form-control"
+        autocomplete="off"
+        maxlength="100"
+        placeholder="Ej. Emergencia"
+        [class.is-invalid]="nombreTocado() && errorNombre() !== null"
+        [value]="nombre()"
+        (input)="actualizarNombre($event)"
+        (blur)="marcarNombreTocado()"
+      />
+      @if (nombreTocado() && errorNombre(); as error) {
+        <div class="sigih-form-error">{{ error }}</div>
+      } @else {
+        <div class="sigih-form-ayuda">Máximo 100 caracteres.</div>
+      }
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        [disabled]="guardando()"
+        (click)="cerrarModal()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!formularioValido() || guardando()"
+        (click)="guardar()"
+      >
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+        } @else {
+          <i class="bi bi-check-lg me-1"></i>
+        }
+        Guardar
+      </button>
+    </div>
+  </app-modal>
+}

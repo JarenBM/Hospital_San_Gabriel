@@ -1,0 +1,566 @@
+<section class="sigih-pagina">
+  <header class="d-flex flex-wrap align-items-end justify-content-between gap-2">
+    <div>
+      <h2 class="sigih-titulo h5 mb-1">Usuarios del sistema</h2>
+      <p class="sigih-contador mb-0">
+        {{ usuariosFiltrados().length }} de {{ usuarios.datos().length }} usuarios
+      </p>
+    </div>
+    @if (puedeGestionar()) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="abrirAlta()">
+        <i class="bi bi-person-plus me-1"></i>
+        Nuevo usuario
+      </button>
+    }
+  </header>
+
+  @if (usuarios.error(); as error) {
+    <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+      <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+      <div>
+        <strong class="d-block">No se pudo cargar la lista de usuarios</strong>
+        <span class="small">{{ error.mensaje }}</span>
+        @if (error.detalle) {
+          <span class="small d-block">{{ error.detalle }}</span>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="card sigih-card">
+    <div class="card-body">
+      <div class="sigih-filtros">
+        <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+          <label class="form-label" for="filtroUsuarios">Buscar</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text" aria-hidden="true">
+              <i class="bi bi-search"></i>
+            </span>
+            <input
+              id="filtroUsuarios"
+              #campoBusqueda
+              type="search"
+              class="form-control"
+              placeholder="Nombre o correo"
+              [value]="busqueda()"
+              (input)="busqueda.set(campoBusqueda.value)"
+            />
+          </div>
+        </div>
+
+        <div class="sigih-filtros__campo">
+          <label class="form-label" for="filtroEstadoUsuarios">Estado</label>
+          <select
+            id="filtroEstadoUsuarios"
+            class="form-select form-select-sm"
+            (change)="cambiarEstado($event)"
+          >
+            <option value="todos" [selected]="filtroEstado() === 'todos'">Todos</option>
+            <option value="activos" [selected]="filtroEstado() === 'activos'">Activos</option>
+            <option value="inactivos" [selected]="filtroEstado() === 'inactivos'">
+              Inactivos
+            </option>
+          </select>
+        </div>
+
+        <div class="sigih-filtros__campo">
+          <label class="form-label" for="filtroRolUsuarios">Rol</label>
+          <select
+            id="filtroRolUsuarios"
+            #campoRolFiltro
+            class="form-select form-select-sm"
+            (change)="filtroRol.set(campoRolFiltro.value)"
+          >
+            <option value="" [selected]="filtroRol() === ''">Todos los roles</option>
+            @for (rol of rolesFiltro(); track rol) {
+              <option [value]="rol" [selected]="filtroRol() === rol">{{ rol }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="sigih-filtros__campo sigih-filtros__campo--auto">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()">
+            <i class="bi bi-x-circle me-1"></i>
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      @if (usuarios.cargando() && !usuarios.cargado()) {
+        <div class="sigih-vacio">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Cargando usuarios…</span>
+        </div>
+      } @else if (usuariosFiltrados().length === 0) {
+        <div class="sigih-vacio">
+          <i class="bi bi-people"></i>
+          <strong>Sin usuarios para mostrar</strong>
+          <span>
+            @if (usuarios.datos().length === 0) {
+              Aún no hay cuentas registradas.
+            } @else {
+              Pruebe con otros criterios de búsqueda.
+            }
+          </span>
+        </div>
+      } @else {
+        <div class="table-responsive mt-3">
+          <table class="table table-hover align-middle sigih-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Usuario</th>
+                <th scope="col">Roles</th>
+                <th scope="col">Creado</th>
+                <th scope="col">Estado</th>
+                @if (puedeGestionar()) {
+                  <th scope="col" class="text-end">Acciones</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuariosFiltrados(); track usuario.id_usuario) {
+                <tr>
+                  <td>
+                    <strong class="d-block">{{ usuario.nombre }}</strong>
+                    <span class="sigih-texto-suave small">{{ usuario.email }}</span>
+                  </td>
+                  <td>
+                    <div class="usuarios__roles">
+                      @for (rol of rolesDe(usuario); track rol) {
+                        <span class="sigih-chip">{{ rol }}</span>
+                      } @empty {
+                        <span class="sigih-texto-suave small">Sin roles</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="sigih-texto-suave small">
+                    {{ formatearFechaHora(usuario.fecha_creacion) }}
+                  </td>
+                  <td>
+                    @if (usuario.activo) {
+                      <span class="badge text-bg-success">Activo</span>
+                    } @else {
+                      <span class="badge text-bg-secondary">Inactivo</span>
+                    }
+                  </td>
+                  @if (puedeGestionar()) {
+                    <td>
+                      <div class="sigih-tabla-acciones">
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          title="Editar usuario"
+                          (click)="abrirEdicion(usuario)"
+                        >
+                          <i class="bi bi-pencil"></i>
+                          <span class="d-none d-xl-inline ms-1">Editar</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-primary"
+                          title="Administrar roles"
+                          (click)="abrirRoles(usuario)"
+                        >
+                          <i class="bi bi-shield-lock"></i>
+                          <span class="d-none d-xl-inline ms-1">Roles</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          title="Cambiar contraseña"
+                          (click)="abrirPassword(usuario)"
+                        >
+                          <i class="bi bi-key"></i>
+                          <span class="d-none d-xl-inline ms-1">Contraseña</span>
+                        </button>
+                        @if (usuario.activo && !esPropio(usuario)) {
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger"
+                            title="Desactivar usuario"
+                            (click)="desactivar(usuario)"
+                          >
+                            <i class="bi bi-person-slash"></i>
+                            <span class="d-none d-xl-inline ms-1">Desactivar</span>
+                          </button>
+                        } @else if (esPropio(usuario)) {
+                          <span class="sigih-contador align-self-center">Tu cuenta</span>
+                        }
+                      </div>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Alta de usuario ===================== -->
+@if (modalAlta()) {
+  <app-modal
+    titulo="Nuevo usuario"
+    subtitulo="Cree una cuenta y asígnele un rol inicial."
+    tamano="lg"
+    (cerrar)="cerrarAlta()"
+  >
+    <form (submit)="crearUsuario(); $event.preventDefault()" novalidate>
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="altaNombre">Nombre completo</label>
+          <input
+            id="altaNombre"
+            #campoNombre
+            type="text"
+            class="form-control"
+            maxlength="100"
+            autocomplete="name"
+            [value]="nombre()"
+            [class.is-invalid]="intentadoAlta() && !!errorNombre()"
+            (input)="nombre.set(campoNombre.value)"
+          />
+          @if (intentadoAlta() && errorNombre()) {
+            <div class="sigih-form-error">{{ errorNombre() }}</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="altaEmail">Correo institucional</label>
+          <input
+            id="altaEmail"
+            #campoEmail
+            type="email"
+            class="form-control"
+            maxlength="150"
+            autocomplete="email"
+            placeholder="usuario@sigih.test"
+            [value]="email()"
+            [class.is-invalid]="intentadoAlta() && !!errorEmail()"
+            (input)="email.set(campoEmail.value)"
+          />
+          @if (intentadoAlta() && errorEmail()) {
+            <div class="sigih-form-error">{{ errorEmail() }}</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="altaPassword">Contraseña</label>
+          <input
+            id="altaPassword"
+            #campoPassword
+            type="password"
+            class="form-control"
+            maxlength="128"
+            autocomplete="new-password"
+            [value]="password()"
+            [class.is-invalid]="intentadoAlta() && !!errorPassword()"
+            (input)="password.set(campoPassword.value)"
+          />
+          @if (intentadoAlta() && errorPassword()) {
+            <div class="sigih-form-error">{{ errorPassword() }}</div>
+          }
+          <div class="sigih-form-ayuda">Mínimo 8 caracteres.</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="altaRol">Rol inicial (opcional)</label>
+          <select
+            id="altaRol"
+            class="form-select"
+            (change)="cambiarRolSeleccionado($event)"
+          >
+            <option value="" [selected]="idRol() === null">Sin rol asignado</option>
+            @for (rol of rolesCatalogo.datos(); track rol.id_rol) {
+              @if (rol.activo) {
+                <option [value]="rol.id_rol" [selected]="idRol() === rol.id_rol">
+                  {{ rol.nombre }}
+                </option>
+              }
+            }
+          </select>
+          <div class="sigih-form-ayuda">Podrá asignar más roles después.</div>
+        </div>
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarAlta()">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardandoAlta()"
+        (click)="crearUsuario()"
+      >
+        @if (guardandoAlta()) {
+          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        }
+        Crear usuario
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- ===================== Edición de usuario ===================== -->
+@if (modalEdicion()) {
+  <app-modal
+    titulo="Editar usuario"
+    [subtitulo]="usuarioEditando()?.nombre ?? ''"
+    tamano="lg"
+    (cerrar)="cerrarEdicion()"
+  >
+    <form (submit)="guardarEdicion(); $event.preventDefault()" novalidate>
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="edicionNombre">Nombre completo</label>
+          <input
+            id="edicionNombre"
+            #campoNombreEdicion
+            type="text"
+            class="form-control"
+            maxlength="100"
+            autocomplete="name"
+            [value]="nombreEdicion()"
+            [class.is-invalid]="intentadoEdicion() && !!errorNombreEdicion()"
+            (input)="nombreEdicion.set(campoNombreEdicion.value)"
+          />
+          @if (intentadoEdicion() && errorNombreEdicion()) {
+            <div class="sigih-form-error">{{ errorNombreEdicion() }}</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="edicionEmail">Correo institucional</label>
+          <input
+            id="edicionEmail"
+            #campoEmailEdicion
+            type="email"
+            class="form-control"
+            maxlength="150"
+            autocomplete="email"
+            [value]="emailEdicion()"
+            [class.is-invalid]="intentadoEdicion() && !!errorEmailEdicion()"
+            (input)="emailEdicion.set(campoEmailEdicion.value)"
+          />
+          @if (intentadoEdicion() && errorEmailEdicion()) {
+            <div class="sigih-form-error">{{ errorEmailEdicion() }}</div>
+          }
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            <input
+              id="edicionActivo"
+              #campoActivo
+              type="checkbox"
+              class="form-check-input"
+              [checked]="activoEdicion()"
+              [disabled]="esPropio(usuarioEditando())"
+              (change)="activoEdicion.set(campoActivo.checked)"
+            />
+            <label class="form-check-label" for="edicionActivo">
+              Cuenta activa
+            </label>
+          </div>
+          @if (esPropio(usuarioEditando())) {
+            <div class="sigih-form-ayuda">
+              No puede desactivar su propia cuenta.
+            </div>
+          } @else {
+            <div class="sigih-form-ayuda">
+              Al desactivarla, el usuario no podrá iniciar sesión.
+            </div>
+          }
+        </div>
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarEdicion()">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardandoEdicion()"
+        (click)="guardarEdicion()"
+      >
+        @if (guardandoEdicion()) {
+          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        }
+        Guardar cambios
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- ===================== Roles del usuario ===================== -->
+@if (modalRoles()) {
+  <app-modal
+    titulo="Roles y permisos"
+    [subtitulo]="usuarioRoles()?.nombre ?? ''"
+    tamano="lg"
+    (cerrar)="cerrarRoles()"
+  >
+    <div class="mb-3">
+      <label class="form-label" for="usuarioNuevoRol">Asignar rol</label>
+      <div class="input-group">
+        <select
+          id="usuarioNuevoRol"
+          class="form-select"
+          [disabled]="cargandoRoles() || rolesParaAsignar().length === 0"
+          (change)="cambiarRolSeleccionado($event)"
+        >
+          <option value="" [selected]="idRolSeleccionado() === null">
+            Seleccione un rol…
+          </option>
+          @for (rol of rolesParaAsignar(); track rol.id_rol) {
+            <option [value]="rol.id_rol" [selected]="idRolSeleccionado() === rol.id_rol">
+              {{ rol.nombre }}
+            </option>
+          }
+        </select>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="idRolSeleccionado() === null || guardandoRol() || cargandoRoles()"
+          (click)="agregarRol()"
+        >
+          <i class="bi bi-plus-lg me-1"></i>
+          Agregar
+        </button>
+      </div>
+      @if (!cargandoRoles() && rolesParaAsignar().length === 0) {
+        <div class="sigih-form-ayuda">
+          No hay roles activos disponibles para asignar.
+        </div>
+      }
+    </div>
+
+    <h3 class="h6 sigih-titulo">Roles asignados</h3>
+    @if (cargandoRoles()) {
+      <div class="sigih-vacio py-3">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>Cargando roles y permisos…</span>
+      </div>
+    } @else if (rolesAsignados().length === 0) {
+      <div class="sigih-vacio py-3">
+        <i class="bi bi-shield-slash"></i>
+        <strong>Sin roles asignados</strong>
+        <span>El usuario solo tendrá los permisos de sus roles.</span>
+      </div>
+    } @else {
+      <ul class="list-group list-group-flush usuarios__roles-lista">
+        @for (rol of rolesAsignados(); track rol.id_rol) {
+          <li class="list-group-item d-flex align-items-center justify-content-between gap-2 px-0">
+            <div>
+              <strong class="d-block">{{ rol.nombre }}</strong>
+              <span class="sigih-texto-suave small">
+                {{ rol.descripcion || 'Sin descripción' }}
+              </span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              [disabled]="guardandoRol()"
+              (click)="quitarRol(rol)"
+            >
+              <i class="bi bi-dash-circle me-1"></i>
+              Quitar
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <h3 class="h6 sigih-titulo mt-4">Permisos efectivos</h3>
+    @if (permisosEfectivos().length === 0) {
+      <p class="sigih-contador mb-0">El usuario no tiene permisos efectivos.</p>
+    } @else {
+      <div class="usuarios__permisos">
+        @for (permiso of permisosEfectivos(); track permiso.codigo) {
+          <span class="sigih-chip" [title]="permiso.modulo">
+            <i class="bi bi-check2"></i>
+            {{ permiso.codigo }}
+          </span>
+        }
+      </div>
+    }
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarRoles()">
+        Cerrar
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- ===================== Cambio de contraseña ===================== -->
+@if (modalPassword()) {
+  <app-modal
+    titulo="Cambiar contraseña"
+    [subtitulo]="usuarioPassword()?.nombre ?? ''"
+    tamano="sm"
+    (cerrar)="cerrarPassword()"
+  >
+    <form (submit)="cambiarPassword(); $event.preventDefault()" novalidate>
+      <div class="mb-3">
+        <label class="form-label" for="passwordNueva">Nueva contraseña</label>
+        <input
+          id="passwordNueva"
+          #campoPasswordNueva
+          type="password"
+          class="form-control"
+          maxlength="128"
+          autocomplete="new-password"
+          [value]="passwordNueva()"
+          [class.is-invalid]="intentadoPassword() && !!errorPasswordNueva()"
+          (input)="passwordNueva.set(campoPasswordNueva.value)"
+        />
+        @if (intentadoPassword() && errorPasswordNueva()) {
+          <div class="sigih-form-error">{{ errorPasswordNueva() }}</div>
+        }
+        <div class="sigih-form-ayuda">Mínimo 8 caracteres.</div>
+      </div>
+
+      <div class="mb-0">
+        <label class="form-label" for="passwordConfirmacion">Confirmar contraseña</label>
+        <input
+          id="passwordConfirmacion"
+          #campoConfirmacion
+          type="password"
+          class="form-control"
+          maxlength="128"
+          autocomplete="new-password"
+          [value]="confirmacionPassword()"
+          [class.is-invalid]="intentadoPassword() && !!errorConfirmacionPassword()"
+          (input)="confirmacionPassword.set(campoConfirmacion.value)"
+        />
+        @if (intentadoPassword() && errorConfirmacionPassword()) {
+          <div class="sigih-form-error">{{ errorConfirmacionPassword() }}</div>
+        }
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="cerrarPassword()">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardandoPassword()"
+        (click)="cambiarPassword()"
+      >
+        @if (guardandoPassword()) {
+          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+        }
+        Cambiar contraseña
+      </button>
+    </div>
+  </app-modal>
+}

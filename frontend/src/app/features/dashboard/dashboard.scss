@@ -2,6 +2,12 @@
    Dashboard
    ============================================================ */
 
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .dashboard__bienvenida {
   border-left: 4px solid var(--sigih-primario);
 }
@@ -42,71 +48,156 @@
   white-space: nowrap;
 }
 
-/* ---------- Métricas ---------- */
+/* ---------- Widgets ---------- */
 
-.dashboard__metrica .card-body {
+.dashboard__widget .card-body {
+  display: flex;
+  flex-direction: column;
   padding: 1.15rem;
 }
 
-.dashboard__metrica-icono {
-  display: inline-flex;
+.dashboard__widget-cabecera {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.7rem;
-  font-size: 1.15rem;
+  gap: 0.6rem;
 }
 
-.dashboard__metrica-icono--azul {
+.dashboard__widget-icono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.7rem;
+  font-size: 1.05rem;
+}
+
+.dashboard__widget-icono--azul {
   background-color: #e7f1fb;
   color: #1d6fbf;
 }
 
-.dashboard__metrica-icono--verde {
+.dashboard__widget-icono--verde {
   background-color: #e3f6ee;
   color: #16835a;
 }
 
-.dashboard__metrica-icono--ambar {
+.dashboard__widget-icono--ambar {
   background-color: #fdf3df;
   color: #a96d08;
 }
 
-.dashboard__metrica-icono--rojo {
-  background-color: #fdeaea;
-  color: #c43c3c;
+.dashboard__widget-icono--violeta {
+  background-color: #efeafa;
+  color: #6d4bb8;
 }
 
-.dashboard__metrica-etiqueta {
-  margin: 0.75rem 0 0.1rem;
+.dashboard__widget-etiqueta {
   color: var(--sigih-texto-suave);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.dashboard__metrica-valor {
-  margin: 0;
+.dashboard__widget-valor {
+  margin: 0.85rem 0 0.1rem;
   color: var(--sigih-texto);
-  font-size: 1.7rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
-.dashboard__metrica-valor--moneda {
-  font-size: 1.35rem;
+.dashboard__widget-valor--moneda {
+  font-size: 1.4rem;
 }
 
-.dashboard__metrica-pie {
-  margin: 0.2rem 0 0;
+.dashboard__widget-pie {
+  margin: 0.15rem 0 0;
   color: var(--sigih-texto-suave);
   font-size: 0.72rem;
 }
 
+.dashboard__placeholder {
+  display: block;
+  height: 1.8rem;
+  margin: 0.85rem 0 0.35rem;
+}
+
+/* ---------- Paneles de alertas ---------- */
+
+.dashboard__panel .card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem;
+}
+
+.dashboard__panel-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.dashboard__panel-titulo {
+  margin: 0;
+  color: var(--sigih-primario-oscuro);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.dashboard__panel-sub {
+  margin: 0.15rem 0 0;
+  color: var(--sigih-texto-suave);
+  font-size: 0.74rem;
+}
+
+.dashboard__lista {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--sigih-borde);
+  font-size: 0.82rem;
+}
+
+.dashboard__fila:last-child {
+  border-bottom: 0;
+}
+
+.dashboard__fila-detalle {
+  display: block;
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+}
+
+.dashboard__progreso {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--sigih-borde);
+  font-size: 0.75rem;
+}
+
+.dashboard__barra-riesgo {
+  background-color: #c43c3c;
+}
+
 /* ---------- Accesos rápidos ---------- */
+
+.dashboard__accesos {
+  margin-top: 0.25rem;
+}
 
 .dashboard__acceso {
   color: inherit;

@@ -13,6 +13,12 @@ const FECHA_LARGA = new Intl.DateTimeFormat('es-PE', {
   dateStyle: 'long',
 });
 
+const FECHA_HORA = new Intl.DateTimeFormat('es-PE', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+
 /**
  * Formatea un monto recibido como ``DecimalString`` (``"12.50"``) o número.
  */
@@ -33,6 +39,35 @@ export function formatearFecha(valor: string | null | undefined): string {
   }
   const fecha = new Date(`${valor}`.length === 10 ? `${valor}T00:00:00` : valor);
   return Number.isNaN(fecha.getTime()) ? '—' : FECHA_LARGA.format(fecha);
+}
+
+/** Formatea una fecha y hora ISO en texto corto peruano. */
+export function formatearFechaHora(valor: string | null | undefined): string {
+  if (!valor) {
+    return '—';
+  }
+  const fecha = new Date(valor);
+  return Number.isNaN(fecha.getTime()) ? '—' : FECHA_HORA.format(fecha);
+}
+
+/** Fecha local en formato ``YYYY-MM-DD`` para ``<input type="date">``. */
+export function fechaISO(fecha: Date = new Date()): string {
+  const anio = fecha.getFullYear();
+  const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
+  const dia = `${fecha.getDate()}`.padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+/** Fecha local de hoy en formato ``YYYY-MM-DD``. */
+export function fechaHoyISO(): string {
+  return fechaISO();
+}
+
+/** Fecha local de hace ``dias`` días en formato ``YYYY-MM-DD``. */
+export function fechaHaceDiasISO(dias: number): string {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() - Math.max(0, dias));
+  return fechaISO(fecha);
 }
 
 /** Saludo según la hora local. */

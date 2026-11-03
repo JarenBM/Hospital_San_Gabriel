@@ -1,0 +1,31 @@
+@if (confirmacion.solicitud(); as solicitud) {
+  <div class="modal d-block dialogo-confirmacion" tabindex="-1" role="dialog" aria-modal="true" (click)="cancelar()">
+    <div class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-body p-4">
+          <div class="d-flex align-items-start gap-3">
+            <span class="dialogo-confirmacion__icono" [class]="'dialogo-confirmacion__icono dialogo-confirmacion__icono--' + (solicitud.variante ?? 'peligro')">
+              <i class="bi {{ solicitud.icono ?? iconoPorDefecto(solicitud.variante ?? 'peligro') }}"></i>
+            </span>
+            <div class="min-w-0">
+              <h2 class="dialogo-confirmacion__titulo">{{ solicitud.titulo }}</h2>
+              <p class="dialogo-confirmacion__mensaje">{{ solicitud.mensaje }}</p>
+              @if (solicitud.detalle) {
+                <p class="dialogo-confirmacion__detalle">{{ solicitud.detalle }}</p>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
+            {{ solicitud.textoCancelar }}
+          </button>
+          <button type="button" class="btn" [class]="'btn ' + claseBoton(solicitud.variante ?? 'peligro')" (click)="aceptar()" autofocus>
+            {{ solicitud.textoConfirmar }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop show dialogo-confirmacion__backdrop"></div>
+}

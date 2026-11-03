@@ -21,8 +21,8 @@ export interface OpcionNavegacion {
 /**
  * Catálogo único de navegación.
  *
- * El sidebar filtra esta lista con ``AuthService.tienePermiso()``. Las rutas
- * de módulos aún no implementados muestran una página de "en construcción".
+ * El sidebar filtra esta lista con ``AuthService.tienePermiso()`` y las rutas
+ * declaradas en ``app.routes.ts`` reutilizan el mismo permiso en ``data``.
  */
 export const NAVEGACION: readonly OpcionNavegacion[] = [
   {
