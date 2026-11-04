@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CargaGlobalService } from '../../../core/services/carga-global.service';
 
 /** Barra superior de progreso mientras hay peticiones en curso. */
@@ -11,6 +11,7 @@ import { CargaGlobalService } from '../../../core/services/carga-global.service'
       </div>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: `
     .carga-global {
       position: fixed;

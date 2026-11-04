@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-not-found',
   imports: [RouterLink],
   templateUrl: './not-found.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './not-found.scss',
 })
 export class NotFound {

@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import type { LoteAlerta, ProductoStockBajo } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,6 +30,7 @@ function valorCampo(evento: Event): string {
 @Component({
   selector: 'app-alertas',
   templateUrl: './alertas.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './alertas.scss',
 })
 export class Alertas implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
 import type { VarianteConfirmacion } from '../../../core/services/confirmacion.service';
 import { ConfirmacionService } from '../../../core/services/confirmacion.service';
 
@@ -18,6 +18,7 @@ const ICONOS: Record<VarianteConfirmacion, string> = {
 @Component({
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './confirm-dialog.scss',
 })
 export class ConfirmDialog {

@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type {
   PermisoAsignado,
@@ -31,6 +38,7 @@ type FiltroEstado = 'todos' | 'activos' | 'inactivos';
   selector: 'app-usuarios',
   imports: [Modal],
   templateUrl: './usuarios.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './usuarios.scss',
 })
 export class Usuarios implements OnInit {
@@ -43,9 +51,7 @@ export class Usuarios implements OnInit {
   protected readonly rolesCatalogo = this.api.rolesCatalogo;
   protected readonly formatearFechaHora = formatearFechaHora;
 
-  protected readonly puedeGestionar = computed(() =>
-    this.auth.tienePermiso('usuarios:gestionar'),
-  );
+  protected readonly puedeGestionar = computed(() => this.auth.tienePermiso('usuarios:gestionar'));
 
   // ---------- Filtros ----------
 
@@ -59,10 +65,7 @@ export class Usuarios implements OnInit {
     const rol = this.filtroRol();
 
     return this.usuarios.datos().filter((usuario) => {
-      if (
-        termino &&
-        !`${usuario.nombre} ${usuario.email}`.toLowerCase().includes(termino)
-      ) {
+      if (termino && !`${usuario.nombre} ${usuario.email}`.toLowerCase().includes(termino)) {
         return false;
       }
       if (estado === 'activos' && !usuario.activo) {
@@ -192,9 +195,7 @@ export class Usuarios implements OnInit {
 
   protected readonly rolesParaAsignar = computed(() => {
     const asignados = new Set(this.rolesAsignados().map((rol) => rol.id_rol));
-    return this.rolesCatalogo
-      .datos()
-      .filter((rol) => rol.activo && !asignados.has(rol.id_rol));
+    return this.rolesCatalogo.datos().filter((rol) => rol.activo && !asignados.has(rol.id_rol));
   });
 
   // ---------- Modal de contraseña ----------

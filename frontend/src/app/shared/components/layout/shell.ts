@@ -1,15 +1,18 @@
-import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  HostListener,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import type { TipoNotificacion } from '../../../core/services/notificacion.service';
 import { NotificacionService } from '../../../core/services/notificacion.service';
 import { AuthService } from '../../../core/services/auth.service';
-import {
-  GRUPOS_NAVEGACION,
-  NAVEGACION,
-  opcionPorUrl,
-} from './navegacion';
+import { GRUPOS_NAVEGACION, NAVEGACION, opcionPorUrl } from './navegacion';
 
 /**
  * Layout principal de la aplicación autenticada.
@@ -22,6 +25,7 @@ import {
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './shell.scss',
 })
 export class Shell {
@@ -42,9 +46,7 @@ export class Shell {
   );
 
   protected readonly opciones = computed(() =>
-    NAVEGACION.filter(
-      (opcion) => !opcion.permiso || this.auth.tienePermiso(opcion.permiso),
-    ),
+    NAVEGACION.filter((opcion) => !opcion.permiso || this.auth.tienePermiso(opcion.permiso)),
   );
 
   protected readonly grupos = computed(() =>
@@ -62,8 +64,7 @@ export class Shell {
   protected readonly descripcionPagina = computed(() => {
     this.navegacion();
     return (
-      opcionPorUrl(this.router.url)?.descripcion ??
-      'Sistema de Gestión de Inventario Hospitalario'
+      opcionPorUrl(this.router.url)?.descripcion ?? 'Sistema de Gestión de Inventario Hospitalario'
     );
   });
 

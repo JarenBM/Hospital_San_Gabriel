@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { PERMISOS_CATALOGO } from '../../models';
 import type { Permiso, Rol, RolActualizar, RolCrear } from '../../models';
@@ -26,6 +33,7 @@ interface GrupoPermisos {
   selector: 'app-roles',
   imports: [Modal],
   templateUrl: './roles.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './roles.scss',
 })
 export class Roles implements OnInit {
@@ -37,9 +45,7 @@ export class Roles implements OnInit {
   protected readonly roles = this.api.rolesCatalogo;
   protected readonly permisosCatalogo = this.api.permisosCatalogo;
 
-  protected readonly puedeGestionar = computed(() =>
-    this.auth.tienePermiso('roles:gestionar'),
-  );
+  protected readonly puedeGestionar = computed(() => this.auth.tienePermiso('roles:gestionar'));
 
   // ---------- Filtros ----------
 
@@ -51,10 +57,7 @@ export class Roles implements OnInit {
     const estado = this.filtroEstado();
 
     return this.roles.datos().filter((rol) => {
-      if (
-        termino &&
-        !`${rol.nombre} ${rol.descripcion ?? ''}`.toLowerCase().includes(termino)
-      ) {
+      if (termino && !`${rol.nombre} ${rol.descripcion ?? ''}`.toLowerCase().includes(termino)) {
         return false;
       }
       if (estado === 'activos' && !rol.activo) {
@@ -225,8 +228,7 @@ export class Roles implements OnInit {
     const aceptada = await this.confirmacion.confirmar({
       titulo: 'Desactivar rol',
       mensaje: `¿Desea desactivar el rol ${rol.nombre}?`,
-      detalle:
-        'Los usuarios que lo tengan asignado dejarán de recibir sus permisos efectivos.',
+      detalle: 'Los usuarios que lo tengan asignado dejarán de recibir sus permisos efectivos.',
       textoConfirmar: 'Desactivar',
       variante: 'peligro',
     });
@@ -294,9 +296,7 @@ export class Roles implements OnInit {
   }
 
   protected marcarTodos(): void {
-    this.seleccionados.set(
-      new Set(this.permisosDisponibles().map((permiso) => permiso.codigo)),
-    );
+    this.seleccionados.set(new Set(this.permisosDisponibles().map((permiso) => permiso.codigo)));
   }
 
   protected limpiarSeleccion(): void {

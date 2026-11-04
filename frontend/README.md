@@ -6,10 +6,11 @@ proxy de desarrollo `/api`.
 
 ## Requisitos
 
-- **Node.js** `^20.19.0`, `^22.12.0` o `>=24.0.0`.
-- **npm 11** (recomendado). Con npm 10.9.3 la instalación falla con
-  `Cannot read properties of null (reading 'edgesOut')` por un bug de Arborist con
-  las dependencias peer de Vitest. Use `npx --yes npm@11 install`.
+- **Node.js** `^22.22.3`, `^24.15.0` o `>=26.0.0` (requisito de Angular 22).
+- **npm 10.9.9 o superior** (recomendado npm 11). Con npm 10.9.3 la instalación falla
+  con `Cannot read properties of null (reading 'edgesOut')` por un bug de Arborist con
+  las dependencias peer de Vitest. Use `npm install -g npm@11` o
+  `npx --yes npm@11 install`.
 - Backend SIGIH en ejecución sobre `http://127.0.0.1:8000`.
 
 ## Puesta en marcha
@@ -243,10 +244,12 @@ ajustes de foco y accesibilidad.
 
 ## Notas de desarrollo
 
-- Angular **21.2** se eligió porque Angular 22 exige Node `>=22.22.3` y el entorno
-  actual usa Node 22.20.0.
-- El login usa **Signal Forms** (`@angular/forms/signals`), experimental en
-  Angular 21; el modelo, la carga y el error son signals.
+- Angular **22.2** (CLI 22.2, TypeScript 6.0), con Node `^22.22.3` como mínimo.
+  La migración desde 21.2 añadió `ChangeDetectionStrategy.Eager` en los 19
+  componentes para conservar el comportamiento previo a la detección `OnPush` por
+  defecto; se puede retirar de forma progresiva en componentes ya basados en signals.
+- El login usa **Signal Forms** (`@angular/forms/signals`), estable desde Angular
+  22; el modelo, la carga y el error son signals.
 - La paginación de listados queda diferida a la siguiente fase del frontend.
 - El stock de lotes solo cambia con entradas y salidas; no existe CRUD de lotes.
 - Los productos no se pueden reactivar desde la API; las categorías, áreas, roles

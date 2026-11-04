@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { finalize } from 'rxjs';
 import type { Area } from '../../models';
 import { ApiService } from '../../core/services/api.service';
@@ -26,6 +33,7 @@ function valorCampo(evento: Event): string {
   selector: 'app-areas',
   imports: [Modal],
   templateUrl: './areas.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './areas.scss',
 })
 export class Areas implements OnInit {
@@ -67,9 +75,7 @@ export class Areas implements OnInit {
   protected readonly guardando = signal(false);
   protected readonly procesando = signal<number | null>(null);
 
-  protected readonly tituloModal = computed(() =>
-    this.editando() ? 'Editar área' : 'Nueva área',
-  );
+  protected readonly tituloModal = computed(() => (this.editando() ? 'Editar área' : 'Nueva área'));
 
   protected readonly subtituloModal = computed(() =>
     this.editando()
@@ -167,10 +173,7 @@ export class Areas implements OnInit {
 
     peticion.pipe(finalize(() => this.guardando.set(false))).subscribe({
       next: () => {
-        this.toasts.exito(
-          area ? 'Área actualizada' : 'Área creada',
-          `Se guardó «${nombre}».`,
-        );
+        this.toasts.exito(area ? 'Área actualizada' : 'Área creada', `Se guardó «${nombre}».`);
         this.modalAbierto.set(false);
       },
       error: (error: unknown) => this.notificarError(error),
@@ -200,8 +203,7 @@ export class Areas implements OnInit {
       .desactivarArea(area.id_area)
       .pipe(finalize(() => this.procesando.set(null)))
       .subscribe({
-        next: () =>
-          this.toasts.exito('Área desactivada', `«${area.nombre}» quedó inactiva.`),
+        next: () => this.toasts.exito('Área desactivada', `«${area.nombre}» quedó inactiva.`),
         error: (error: unknown) => this.notificarError(error),
       });
   }
@@ -216,8 +218,7 @@ export class Areas implements OnInit {
       .actualizarArea(area.id_area, { nombre: area.nombre, activo: true })
       .pipe(finalize(() => this.procesando.set(null)))
       .subscribe({
-        next: () =>
-          this.toasts.exito('Área reactivada', `«${area.nombre}» volvió a estar activa.`),
+        next: () => this.toasts.exito('Área reactivada', `«${area.nombre}» volvió a estar activa.`),
         error: (error: unknown) => this.notificarError(error),
       });
   }

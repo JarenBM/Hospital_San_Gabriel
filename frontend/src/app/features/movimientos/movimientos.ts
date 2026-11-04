@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { finalize } from 'rxjs';
 import type { Lote, MotivoEntrada, TipoMovimiento } from '../../models';
 import { MOTIVOS_ENTRADA } from '../../models';
@@ -43,6 +50,7 @@ interface ErroresSalida {
   selector: 'app-movimientos',
   imports: [Modal],
   templateUrl: './movimientos.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './movimientos.scss',
 })
 export class Movimientos implements OnInit {
@@ -57,25 +65,15 @@ export class Movimientos implements OnInit {
   protected readonly cargandoProductos = this.api.productos.cargando;
   protected readonly cargandoAreas = this.api.areas.cargando;
 
-  protected readonly puedeLeer = computed(() =>
-    this.auth.tienePermiso('movimientos:leer'),
-  );
-  protected readonly puedeEntrada = computed(() =>
-    this.auth.tienePermiso('movimientos:entrada'),
-  );
-  protected readonly puedeSalida = computed(() =>
-    this.auth.tienePermiso('movimientos:salida'),
-  );
+  protected readonly puedeLeer = computed(() => this.auth.tienePermiso('movimientos:leer'));
+  protected readonly puedeEntrada = computed(() => this.auth.tienePermiso('movimientos:entrada'));
+  protected readonly puedeSalida = computed(() => this.auth.tienePermiso('movimientos:salida'));
 
   protected readonly formatearFecha = formatearFecha;
   protected readonly formatearFechaHora = formatearFechaHora;
   protected readonly formatearNumero = formatearNumero;
   protected readonly motivosEntrada = MOTIVOS_ENTRADA;
-  protected readonly tiposFiltro: readonly FiltroTipo[] = [
-    'TODOS',
-    'ENTRADA',
-    'SALIDA',
-  ];
+  protected readonly tiposFiltro: readonly FiltroTipo[] = ['TODOS', 'ENTRADA', 'SALIDA'];
   protected readonly hoy = fechaHoyISO();
 
   // ---------- Filtros ----------
@@ -87,8 +85,7 @@ export class Movimientos implements OnInit {
   protected readonly hasta = signal('');
 
   protected readonly rangoInvalido = computed(
-    () =>
-      this.desde() !== '' && this.hasta() !== '' && this.desde() > this.hasta(),
+    () => this.desde() !== '' && this.hasta() !== '' && this.desde() > this.hasta(),
   );
 
   protected readonly areaFiltro = computed(() => {
@@ -99,9 +96,7 @@ export class Movimientos implements OnInit {
     return this.areas().find((area) => area.id_area === id) ?? null;
   });
 
-  protected readonly totalMovimientos = computed(
-    () => this.movimientos.datos().length,
-  );
+  protected readonly totalMovimientos = computed(() => this.movimientos.datos().length);
 
   protected readonly movimientosFiltrados = computed(() => {
     const termino = this.busqueda().trim().toLowerCase();
@@ -244,16 +239,12 @@ export class Movimientos implements OnInit {
     return this.lotesSalida().find((lote) => lote.id_lote === id) ?? null;
   });
 
-  protected readonly stockMaximo = computed(
-    () => this.loteSalida()?.stock_actual ?? 0,
-  );
+  protected readonly stockMaximo = computed(() => this.loteSalida()?.stock_actual ?? 0);
 
   protected readonly erroresSalida = computed<ErroresSalida>(() => {
     const producto = this.productoSalida();
     const lote = this.loteSalida();
-    const area = this.areasActivas().find(
-      (item) => item.id_area === this.idAreaSalida(),
-    );
+    const area = this.areasActivas().find((item) => item.id_area === this.idAreaSalida());
     const cantidadTexto = this.cantidadSalida().trim();
     const cantidad = Number(cantidadTexto);
     const motivo = this.motivoSalida().trim();
@@ -405,9 +396,7 @@ export class Movimientos implements OnInit {
         id_producto: producto.id_producto,
         cantidad: Number(this.cantidadEntrada()),
         motivo,
-        numero_lote: producto.maneja_lotes
-          ? this.numeroLoteEntrada().trim()
-          : null,
+        numero_lote: producto.maneja_lotes ? this.numeroLoteEntrada().trim() : null,
         fecha_vencimiento: fecha !== '' ? fecha : null,
       })
       .pipe(finalize(() => this.guardando.set(false)))
@@ -588,9 +577,7 @@ export class Movimientos implements OnInit {
           if (secuencia !== this.secuenciaLotesSalida) {
             return;
           }
-          this.lotesSalida.set(
-            lotes.filter((lote) => lote.stock_actual > 0 && !lote.vencido),
-          );
+          this.lotesSalida.set(lotes.filter((lote) => lote.stock_actual > 0 && !lote.vencido));
         },
         error: (error: unknown) => {
           if (secuencia !== this.secuenciaLotesSalida) {

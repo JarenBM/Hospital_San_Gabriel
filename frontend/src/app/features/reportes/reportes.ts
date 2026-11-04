@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { finalize } from 'rxjs';
 import type { MayorSalida, MovimientoListado, ProductoListado } from '../../models';
 import { ApiService } from '../../core/services/api.service';
@@ -41,6 +48,7 @@ function validarRango(desde: string, hasta: string): string | null {
 @Component({
   selector: 'app-reportes',
   templateUrl: './reportes.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './reportes.scss',
 })
 export class Reportes implements OnInit {
@@ -107,9 +115,7 @@ export class Reportes implements OnInit {
     validarRango(this.desdeMayores(), this.hastaMayores()),
   );
 
-  protected readonly formularioMayoresValido = computed(
-    () => this.errorRangoMayores() === null,
-  );
+  protected readonly formularioMayoresValido = computed(() => this.errorRangoMayores() === null);
 
   protected readonly resumenKardex = computed(() => {
     let entradas = 0;

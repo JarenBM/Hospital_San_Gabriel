@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-forbidden',
   imports: [RouterLink],
   templateUrl: './forbidden.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './forbidden.scss',
 })
 export class Forbidden {

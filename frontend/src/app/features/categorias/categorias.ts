@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import type { Categoria } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -24,6 +31,7 @@ const MAX_DESCRIPCION = 255;
   selector: 'app-categorias',
   imports: [Modal],
   templateUrl: './categorias.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './categorias.scss',
 })
 export class Categorias implements OnInit {
@@ -34,9 +42,7 @@ export class Categorias implements OnInit {
 
   protected readonly categorias = this.api.categorias;
 
-  protected readonly puedeEscribir = computed(() =>
-    this.auth.tienePermiso('categorias:escribir'),
-  );
+  protected readonly puedeEscribir = computed(() => this.auth.tienePermiso('categorias:escribir'));
 
   // ---------- Filtros ----------
 
@@ -136,9 +142,7 @@ export class Categorias implements OnInit {
 
   protected cambiarFiltroEstado(evento: Event): void {
     const valor = this.valorDe(evento);
-    this.filtroEstado.set(
-      valor === 'activos' || valor === 'inactivos' ? valor : 'todos',
-    );
+    this.filtroEstado.set(valor === 'activos' || valor === 'inactivos' ? valor : 'todos');
   }
 
   protected limpiarFiltros(): void {
@@ -218,9 +222,7 @@ export class Categorias implements OnInit {
         this.guardando.set(false);
         this.errorModal.set(texto);
         this.toasts.error(
-          editando
-            ? 'No se pudo actualizar la categoría'
-            : 'No se pudo crear la categoría',
+          editando ? 'No se pudo actualizar la categoría' : 'No se pudo crear la categoría',
           texto,
         );
       },
@@ -253,10 +255,7 @@ export class Categorias implements OnInit {
       },
       error: (error: unknown) => {
         const { mensaje, detalle } = describirError(error);
-        this.toasts.error(
-          'No se pudo desactivar la categoría',
-          detalle ?? mensaje,
-        );
+        this.toasts.error('No se pudo desactivar la categoría', detalle ?? mensaje);
       },
     });
   }
@@ -283,10 +282,7 @@ export class Categorias implements OnInit {
         error: (error: unknown) => {
           const { mensaje, detalle } = describirError(error);
           this.reactivandoId.set(null);
-          this.toasts.error(
-            'No se pudo reactivar la categoría',
-            detalle ?? mensaje,
-          );
+          this.toasts.error('No se pudo reactivar la categoría', detalle ?? mensaje);
         },
       });
   }

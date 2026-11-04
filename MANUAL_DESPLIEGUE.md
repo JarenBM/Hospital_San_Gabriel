@@ -32,7 +32,7 @@ El sistema se compone de tres capas que deben estar activas **en este orden**: b
 
 ```text
 ┌──────────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
-│  SQL Server              │        │  FastAPI (uvicorn)       │        │  Angular 21              │
+│  SQL Server              │        │  FastAPI (uvicorn)       │        │  Angular 22              │
 │  Base de datos SIGIH     │◀──────▶│  http://127.0.0.1:8000   │◀──────▶│  http://localhost:4200   │
 │  Instancia .\SQLEXPRESS  │  pyodbc│  Login JWT + RBAC        │  /api  │  Signals + Bootstrap 5   │
 └──────────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
@@ -43,7 +43,7 @@ El sistema se compone de tres capas que deben estar activas **en este orden**: b
 |---|---|---|---|
 | Base de datos | SQL Server Express/Developer | `.\SQLEXPRESS` (instancia con nombre) | `database/` |
 | API | Python + FastAPI + uvicorn | `http://127.0.0.1:8000` | `backend/` |
-| Interfaz web | Angular 21 Standalone + Signals | `http://localhost:4200` | `frontend/` |
+| Interfaz web | Angular 22 Standalone + Signals | `http://localhost:4200` | `frontend/` |
 
 > **Supuesto de despliegue:** las tres capas corren en la misma máquina. El frontend usa rutas relativas `/api` y el archivo `frontend/proxy.conf.json` las redirige a `http://127.0.0.1:8000`, por lo que no hay problemas de CORS en desarrollo.
 
@@ -55,8 +55,8 @@ El sistema se compone de tres capas que deben estar activas **en este orden**: b
 
 | # | Componente | Versión / requisito | Verificación |
 |---|---|---|---|
-| 1 | Node.js | `^20.19.0`, `^22.12.0` o `>=24.0.0` | `node -v` |
-| 2 | npm | 10.9.3 o superior (se recomienda npm 11) | `npm -v` |
+| 1 | Node.js | `^22.22.3`, `^24.15.0` o `>=26.0.0` (Angular 22 no admite versiones anteriores) | `node -v` |
+| 2 | npm | 10.9.9 o superior (se recomienda npm 11) | `npm -v` |
 | 3 | Python | 3.11 o superior (el proyecto fija 3.14) | `python --version` |
 | 4 | uv | Última versión estable | `uv --version` |
 | 5 | SQL Server | Express o Developer, en ejecución | `Get-Service *MSSQL*` |
@@ -73,11 +73,11 @@ El sistema se compone de tres capas que deben estar activas **en este orden**: b
 3. Verifique:
 
 ```powershell
-node -v    # v20.19.x, v22.12.x o v24.x o superior
+node -v    # v22.22.3+, v24.15+ o v26+ (obligatorio para Angular 22)
 npm -v
 ```
 
-> **Nota sobre npm:** con npm 10.9.3 puede aparecer el error `Cannot read properties of null (reading 'edgesOut')` al instalar las dependencias del frontend (bug de Arborist con las dependencias peer de Vitest). En ese caso use `npx --yes npm@11 install`; el proyecto fue validado con npm 11.
+> **Nota sobre npm:** con npm 10.9.3 puede aparecer el error `Cannot read properties of null (reading 'edgesOut')` al instalar las dependencias del frontend (bug de Arborist con las dependencias peer de Vitest). En ese caso actualice npm (`npm install -g npm@11`) o use `npx --yes npm@11 install`. El proyecto fue validado con npm 10.9.9.
 
 ### 2.3 Python y uv
 
@@ -456,7 +456,7 @@ cd C:\SIGIH\Hospital_San_Gabriel\frontend
 npm install
 ```
 
-Esto descarga Angular 21, Bootstrap 5, Bootstrap Icons, RxJS, TypeScript, Vitest y el resto de dependencias en `frontend/node_modules/`. **Es obligatorio ejecutarlo antes del arranque** para garantizar la disponibilidad local (incluso sin conexión) de Bootstrap y las librerías.
+Esto descarga Angular 22, Bootstrap 5, Bootstrap Icons, RxJS, TypeScript, Vitest y el resto de dependencias en `frontend/node_modules/`. **Es obligatorio ejecutarlo antes del arranque** para garantizar la disponibilidad local (incluso sin conexión) de Bootstrap y las librerías.
 
 - Si npm 10 falla con `Cannot read properties of null (reading 'edgesOut')`, use:
 
@@ -492,7 +492,8 @@ ng serve            # solo si tiene @angular/cli global en el PATH
 
 1. Abra <http://localhost:4200>. Debe aparecer la pantalla de inicio de sesión de SIGIH.
 2. Verifique en la pestaña **Network** del navegador que las peticiones van a `/api/...` y responden `200`.
-3. Si la compilación falla, revise la versión de Node (`node -v`) y vuelva a ejecutar `npm install`.
+3. Confirme la versión del framework: `npx ng version` debe mostrar **Angular 22.2.x** y **Angular CLI 22.2.x**. Si muestra 21.x, el `npm install` no se ejecutó sobre esta carpeta.
+4. Si la compilación falla, revise la versión de Node (`node -v`, debe ser `^22.22.3`, `^24.15.0` o `>=26.0.0`) y vuelva a ejecutar `npm install`.
 
 ### 6.4 Compilación de producción (opcional)
 
@@ -531,7 +532,7 @@ Ejecute las comprobaciones en orden. No continúe a la siguiente capa si la ante
 | 7 | Backend | Swagger | Abrir `http://127.0.0.1:8000/docs` | Swagger UI con todos los routers |
 | 8 | Backend | Login | `POST /api/auth/login` (paso 5.4) | `access_token` y `token_type: bearer` |
 | 9 | Backend | Sesión | `GET /api/auth/me` con el token | Usuario y permisos |
-| 10 | Frontend | Dependencias | `npm install` | Sin errores; existe `node_modules/` |
+| 10 | Frontend | Dependencias | `npm install` | Sin errores; existe `node_modules/` y `npx ng version` muestra Angular 22.2.x |
 | 11 | Frontend | Arranque | `npm start` | `Local: http://localhost:4200/` |
 | 12 | Frontend | Login visual | Abrir la URL e iniciar sesión | Dashboard con menú lateral completo |
 | 13 | Integración | Datos reales | Crear una categoría y un producto | Aparecen en la tabla y en el dashboard |

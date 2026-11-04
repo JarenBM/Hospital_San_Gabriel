@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   email as validarEmail,
   form,
@@ -29,6 +29,7 @@ interface DatosLogin {
   selector: 'app-login',
   imports: [FormField],
   templateUrl: './login.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './login.scss',
 })
 export class Login {
@@ -73,12 +74,9 @@ export class Login {
       action: async () => {
         this.cargando.set(true);
         try {
-          const usuario = await firstValueFrom(
-            this.auth.login(this.email(), this.password()),
-          );
+          const usuario = await firstValueFrom(this.auth.login(this.email(), this.password()));
 
-          const destino =
-            this.returnUrl ?? this.auth.rutaInicioPara(usuario);
+          const destino = this.returnUrl ?? this.auth.rutaInicioPara(usuario);
 
           await this.router.navigateByUrl(destino, { replaceUrl: true });
         } catch (error: unknown) {

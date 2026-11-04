@@ -1,4 +1,4 @@
-import { Component, HostListener, input, output } from '@angular/core';
+import { Component, HostListener, input, output, ChangeDetectionStrategy } from '@angular/core';
 
 export type TamanoModal = 'sm' | 'lg' | 'xl';
 
@@ -21,6 +21,7 @@ export type TamanoModal = 'sm' | 'lg' | 'xl';
 @Component({
   selector: 'app-modal',
   templateUrl: './modal.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './modal.scss',
 })
 export class Modal {

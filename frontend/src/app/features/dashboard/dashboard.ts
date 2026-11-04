@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,6 +20,7 @@ import { NAVEGACION } from '../../shared/components/layout/navegacion';
   selector: 'app-dashboard',
   imports: [RouterLink],
   templateUrl: './dashboard.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
@@ -46,9 +47,7 @@ export class Dashboard implements OnInit {
 
   // ---------- Métricas derivadas ----------
 
-  protected readonly totalProductos = computed(
-    () => this.resumen.datos()?.productos_activos ?? 0,
-  );
+  protected readonly totalProductos = computed(() => this.resumen.datos()?.productos_activos ?? 0);
 
   protected readonly valorInventario = computed(() => this.api.valorInventario());
 
@@ -68,9 +67,7 @@ export class Dashboard implements OnInit {
 
   protected readonly porcentajeStockBajo = computed(() => {
     const total = this.totalProductos();
-    return total > 0
-      ? Math.min(100, Math.round((this.alertasStockBajo() / total) * 100))
-      : 0;
+    return total > 0 ? Math.min(100, Math.round((this.alertasStockBajo() / total) * 100)) : 0;
   });
 
   protected readonly topStockBajo = computed(() => this.stockBajo.datos().slice(0, 5));
@@ -79,8 +76,7 @@ export class Dashboard implements OnInit {
   protected readonly accesos = computed(() =>
     NAVEGACION.filter(
       (opcion) =>
-        opcion.ruta !== '/dashboard' &&
-        (!opcion.permiso || this.auth.tienePermiso(opcion.permiso)),
+        opcion.ruta !== '/dashboard' && (!opcion.permiso || this.auth.tienePermiso(opcion.permiso)),
     ).slice(0, 6),
   );
 

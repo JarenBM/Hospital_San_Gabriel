@@ -1,15 +1,18 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { finalize } from 'rxjs';
 import type { Lote } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { describirError } from '../../core/utils/errores';
-import {
-  formatearFecha,
-  formatearFechaHora,
-  formatearNumero,
-} from '../../core/utils/formato';
+import { formatearFecha, formatearFechaHora, formatearNumero } from '../../core/utils/formato';
 
 /**
  * Consulta de lotes por producto.
@@ -20,6 +23,7 @@ import {
 @Component({
   selector: 'app-lotes',
   templateUrl: './lotes.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './lotes.scss',
 })
 export class Lotes implements OnInit {
@@ -29,9 +33,7 @@ export class Lotes implements OnInit {
 
   protected readonly productos = this.api.productosActivos;
   protected readonly cargandoProductos = this.api.productos.cargando;
-  protected readonly puedeLeer = computed(() =>
-    this.auth.tienePermiso('lotes:leer'),
-  );
+  protected readonly puedeLeer = computed(() => this.auth.tienePermiso('lotes:leer'));
 
   protected readonly idProducto = signal<number | null>(null);
   protected readonly lotes = signal<Lote[]>([]);

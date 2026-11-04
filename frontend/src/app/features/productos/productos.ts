@@ -1,4 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import type { ProductoListado } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -13,12 +20,7 @@ type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
 /** Campos de texto del formulario de producto. */
 type CampoTextoProducto =
-  | 'codigo'
-  | 'nombre'
-  | 'descripcion'
-  | 'unidadMedida'
-  | 'precioUnitario'
-  | 'stockMinimo';
+  'codigo' | 'nombre' | 'descripcion' | 'unidadMedida' | 'precioUnitario' | 'stockMinimo';
 
 /** Campos booleanos del formulario de producto. */
 type CampoBooleanoProducto = 'manejaLotes' | 'requiereVencimiento';
@@ -40,6 +42,7 @@ const MAX_ENTERO = 2_147_483_647;
   selector: 'app-productos',
   imports: [Modal],
   templateUrl: './productos.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './productos.scss',
 })
 export class Productos implements OnInit {
@@ -52,9 +55,7 @@ export class Productos implements OnInit {
   protected readonly categorias = this.api.categorias;
   protected readonly formatearMoneda = formatearMoneda;
 
-  protected readonly puedeEscribir = computed(() =>
-    this.auth.tienePermiso('productos:escribir'),
-  );
+  protected readonly puedeEscribir = computed(() => this.auth.tienePermiso('productos:escribir'));
 
   // ---------- Filtros ----------
 
@@ -162,9 +163,7 @@ export class Productos implements OnInit {
     if (id === null) {
       return 'Seleccione una categoría.';
     }
-    const existe = this.categorias
-      .datos()
-      .some((categoria) => categoria.id_categoria === id);
+    const existe = this.categorias.datos().some((categoria) => categoria.id_categoria === id);
     return existe ? null : 'Seleccione una categoría válida.';
   });
 
@@ -256,9 +255,7 @@ export class Productos implements OnInit {
 
   protected cambiarFiltroEstado(evento: Event): void {
     const valor = this.valorDe(evento);
-    this.filtroEstado.set(
-      valor === 'activos' || valor === 'inactivos' ? valor : 'todos',
-    );
+    this.filtroEstado.set(valor === 'activos' || valor === 'inactivos' ? valor : 'todos');
   }
 
   protected limpiarFiltros(): void {
@@ -396,9 +393,7 @@ export class Productos implements OnInit {
         this.guardando.set(false);
         this.errorModal.set(texto);
         this.toasts.error(
-          editando
-            ? 'No se pudo actualizar el producto'
-            : 'No se pudo crear el producto',
+          editando ? 'No se pudo actualizar el producto' : 'No se pudo crear el producto',
           texto,
         );
       },
@@ -426,18 +421,12 @@ export class Productos implements OnInit {
 
     this.api.desactivarProducto(producto.id_producto).subscribe({
       next: () => {
-        this.toasts.exito(
-          'Producto desactivado',
-          `${producto.codigo} · ${producto.nombre}`,
-        );
+        this.toasts.exito('Producto desactivado', `${producto.codigo} · ${producto.nombre}`);
         this.recargarProductos();
       },
       error: (error: unknown) => {
         const { mensaje, detalle } = describirError(error);
-        this.toasts.error(
-          'No se pudo desactivar el producto',
-          detalle ?? mensaje,
-        );
+        this.toasts.error('No se pudo desactivar el producto', detalle ?? mensaje);
       },
     });
   }
