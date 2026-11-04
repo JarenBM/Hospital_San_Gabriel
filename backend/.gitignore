@@ -9,7 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
-# Environment variables (credentials)
-.env
+# Variables de entorno
+# .env SI se versiona a proposito: proyecto academico con credenciales de
+# desarrollo, para que funcione al clonar sin configuracion adicional.
+.env.local
+.env.production
 .env.*
+!.env
 !.env.example

@@ -4,6 +4,8 @@ Scripts idempotentes para SQL Server 2017+ (probado en SQL Server 2025 Express).
 Se pueden ejecutar varias veces: las tablas usan `IF OBJECT_ID(...) IS NULL` y
 los procedimientos `CREATE OR ALTER`.
 
+> Instalación completa del proyecto: [`../README.md`](../README.md#inicio-rápido-1015-minutos).
+
 ## Instalación rápida (un solo archivo)
 
 Para un equipo nuevo **no hace falta ejecutar los 19 scripts uno por uno**. El
@@ -21,9 +23,12 @@ la base, tablas, RBAC, stored procedures, catálogos, roles, administrador, logi
 **sqlcmd**
 
 ```powershell
-cd C:\ruta\del\proyecto
+cd <carpeta-del-proyecto>
 sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
 ```
+
+En PowerShell, reemplace `<carpeta-del-proyecto>` por la ruta real, por ejemplo
+`C:\Users\SuUsuario\Documents\Hospital_San_Gabriel`.
 
 > **Contraseña de `sigih_app`:** el archivo define
 > `DECLARE @password NVARCHAR(128) = N'Sigih.App.2026!';`. Debe coincidir con
@@ -36,7 +41,7 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
 ## Orden de ejecución
 
 ```powershell
-cd C:\Users\PC\Documents\Hospital_San_Gabriel
+cd <carpeta-del-proyecto>
 
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\00_crear_base.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\01_tablas_base.sql
@@ -77,6 +82,8 @@ el error `51801` en lugar de crear el usuario con una clave vacía.
 | Usuario API | `admin.desarrollo@sigih.test` |
 | Contraseña API | `Admin.2026!` |
 | Rol | `ADMINISTRADOR` |
+| Usuario de aplicación SQL | `sigih_app` |
+| Contraseña de `sigih_app` | `Sigih.App.2026!` (debe coincidir con `backend/.env`) |
 
 > Cambiar la contraseña después del primer inicio de sesión. El hash Argon2id
 > vive en `16_admin_inicial.sql`; no se guarda la contraseña en la base.

@@ -15,15 +15,19 @@ proxy de desarrollo `/api`.
 
 ## Puesta en marcha
 
+La instalación completa del proyecto está en el
+[README raíz](../README.md#inicio-rápido-1015-minutos). Resumen:
+
 ### 1. Backend
 
 ```powershell
 cd backend
-uv run uvicorn backend.main:app --reload
+uv sync
+uv run uvicorn src.backend.main:app
 ```
 
-Compruebe `http://127.0.0.1:8000/docs`. Los endpoints de la API requieren token,
-salvo `POST /api/auth/login`.
+Debe ejecutarse **desde `backend/`** y **sin `--reload`**. Compruebe
+`http://127.0.0.1:8000/docs`.
 
 Credenciales de desarrollo sembradas por la base de datos:
 
@@ -34,8 +38,8 @@ Credenciales de desarrollo sembradas por la base de datos:
 
 ```powershell
 cd frontend
-npx --yes npm@11 install
-npx --yes npm@11 start
+npm install
+npm start
 ```
 
 La aplicación queda en `http://localhost:4200/`. El archivo `proxy.conf.json`

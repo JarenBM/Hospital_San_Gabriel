@@ -12,7 +12,7 @@ Estructura por capas en `src/backend/` (`main.py`, `apis/`, `services/`, `reposi
 - Alertas (solo lectura): `GET /api/alertas/stock-bajo`, `GET /api/alertas/por-vencer?dias=30`, `GET /api/alertas/vencidos`, `GET /api/alertas/resumen?desde=&hasta=`.
 - Autenticación: `POST /api/auth/login` (OAuth2 password form: `username` = correo, `password`) y `GET /api/auth/me`. Emite JWT HS256 de 60 minutos.
 
-`sp_Area_Listar` ya está instalado en la base (lo crea `database/SIGIH_Areas_Listar.sql`) y sigue pendiente incorporarlo al script maestro de instalación de SIGIH.
+El modelo completo de la base (incluido `sp_Area_Listar`) se instala con `database/INSTALAR_SIGIH.sql`.
 
 Sin commits, sin tests, sin linter ni CI.
 
@@ -20,7 +20,7 @@ Alcance inmediato: categorías, productos, inventario, alertas y autenticación.
 
 ## Comandos
 - `uv sync` — crea/actualiza `.venv` desde `uv.lock`
-- `uv run uvicorn backend.main:app` — **único comando de inicio** (desde la raíz del proyecto). Sin `--reload` por decisión del equipo: tras cambiar código hay que reiniciar.
+- `uv run uvicorn src.backend.main:app` — **único comando de inicio**, ejecutado **dentro de `backend/`**. Sin `--reload` por decisión del equipo: tras cambiar código hay que reiniciar.
 - `uv add <pkg>` / `uv add --dev <pkg>` — no editar dependencias a mano sin actualizar `uv.lock`
 - `uv run python <archivo>` — siempre vía `uv run`; un `python` global no tiene las dependencias
 - No tocar `[project.scripts]`: `uv run backend` apunta al stub de `__init__.py` y no arranca la API.
