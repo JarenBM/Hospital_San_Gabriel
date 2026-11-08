@@ -8,10 +8,10 @@ los procedimientos `CREATE OR ALTER`.
 
 ## Instalación rápida (un solo archivo)
 
-Para un equipo nuevo **no hace falta ejecutar los 19 scripts uno por uno**. El
+Para un equipo nuevo **no hace falta ejecutar los 20 scripts uno por uno**. El
 archivo **`INSTALAR_SIGIH.sql`** contiene todo el proceso en orden: creación de
 la base, tablas, RBAC, stored procedures, catálogos, roles, administrador, login
-`sigih_app` y la verificación final.
+`sigih_app`, datos de demostración y la verificación final.
 
 **SSMS**
 
@@ -61,6 +61,7 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\14_seed_catalogos.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\15_seed_rbac.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\16_admin_inicial.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="UnaClaveFuerte.2026!"
+sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\18_seed_demo.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 ```
 
@@ -79,9 +80,12 @@ el error `51801` en lugar de crear el usuario con una clave vacía.
 
 | Elemento | Valor |
 |---|---|
-| Usuario API | `admin.desarrollo@sigih.test` |
-| Contraseña API | `Admin.2026!` |
+| Usuario API (administrador) | `admin.desarrollo@sigih.test` |
+| Contraseña API (administrador) | `Admin.2026!` |
 | Rol | `ADMINISTRADOR` |
+| Usuario API (almacén) | `almacen.demo@sigih.test` |
+| Contraseña API (almacén) | `Admin.2026!` |
+| Rol | `ALMACEN` |
 | Usuario de aplicación SQL | `sigih_app` |
 | Contraseña de `sigih_app` | `Sigih.App.2026!` (debe coincidir con `backend/.env`) |
 
@@ -120,6 +124,7 @@ sp_...`. El acceso directo a tablas queda bloqueado.
 | `15` | Roles, permisos y asignaciones |
 | `16` | Administrador inicial |
 | `17` | Usuario `sigih_app` y permisos |
+| `18` | Datos de demostración (catálogos, productos, lotes y movimientos) |
 | `99` | Verificación |
 
 ## Reglas de negocio relevantes
@@ -130,6 +135,9 @@ sp_...`. El acceso directo a tablas queda bloqueado.
 - El último administrador activo no se puede desactivar (`52004`, `409`).
 - Las entradas y salidas actualizan stock y movimiento en una sola transacción
   dentro del SP.
+- `18_seed_demo.sql` tampoco escribe `Lotes.stock_actual` directamente: usa los
+  SP de entrada y salida, así que el stock y el kardex siempre cuadran. Sus
+  movimientos se reparten en los últimos cuatro meses.
 - La auditoría es best-effort: un fallo al registrarla nunca revierte la
   operación principal.
 

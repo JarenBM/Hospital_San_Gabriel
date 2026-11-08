@@ -77,7 +77,9 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -I -f 65001 -i database\INSTALAR_SIGIH.sql
 hay mensajes en rojo.
 
 Esto crea la base `SIGIH`, sus 11 tablas, 71 procedimientos almacenados, los 3
-roles, el usuario administrador y el login de aplicación `sigih_app`.
+roles, el usuario administrador y el login de aplicación `sigih_app`. Además
+carga **datos de demostración**: 5 categorías, 8 áreas, 21 productos, 23 lotes y
+43 movimientos, con alertas de stock bajo y vencimientos.
 
 > Si no tiene `sqlcmd`, abra `database\INSTALAR_SIGIH.sql` en SSMS y pulse `F5`.
 
@@ -138,7 +140,8 @@ Debe ver el dashboard con el menú lateral completo.
 
 | Uso | Usuario | Contraseña |
 |---|---|---|
-| Aplicación web | `admin.desarrollo@sigih.test` | `Admin.2026!` |
+| Aplicación web (administrador) | `admin.desarrollo@sigih.test` | `Admin.2026!` |
+| Aplicación web (almacén) | `almacen.demo@sigih.test` | `Admin.2026!` |
 | Login de SQL Server (solo API) | `sigih_app` | `Sigih.App.2026!` |
 
 - El usuario `sigih_app` **solo puede ejecutar procedimientos**; no lee ni

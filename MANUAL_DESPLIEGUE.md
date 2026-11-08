@@ -202,7 +202,7 @@ Hospital_San_Gabriel/
 ├── README.md                  # inicio rápido
 ├── MANUAL_DESPLIEGUE.md       # este documento
 ├── database/
-│   ├── INSTALAR_SIGIH.sql     # ⭐ instalación completa (00 a 17 + verificación)
+│   ├── INSTALAR_SIGIH.sql     # ⭐ instalación completa (00 a 18 + verificación)
 │   ├── 00_crear_base.sql
 │   ├── ...
 │   └── 99_verificar.sql
@@ -236,7 +236,7 @@ Hospital_San_Gabriel/
 
 `database/INSTALAR_SIGIH.sql` contiene todo el proceso en orden: creación de la
 base, tablas, RBAC, stored procedures, catálogos, roles, administrador, login
-`sigih_app` y la verificación final.
+`sigih_app`, datos de demostración y la verificación final.
 
 Desde la raíz del proyecto:
 
@@ -303,8 +303,10 @@ Para una verificación completa puede ejecutar de nuevo el bloque final:
 sqlcmd -S .\SQLEXPRESS -E -C -f 65001 -i database\99_verificar.sql
 ```
 
-> La base recién instalada **no contiene productos**: solo catálogos, roles,
-> permisos y el administrador. Es correcto que el dashboard muestre 0 productos.
+> La base recién instalada **ya contiene datos de demostración**: 5 categorías,
+> 8 áreas, 21 productos, 23 lotes y 43 movimientos. El dashboard muestra
+> 3 productos en stock bajo, 2 lotes por vencer y 1 lote vencido. Puede usar esos
+> datos para probar de inmediato o crear los suyos.
 
 ---
 
@@ -465,12 +467,14 @@ web.
 
 | Uso | Usuario | Contraseña |
 |---|---|---|
-| Aplicación web | `admin.desarrollo@sigih.test` | `Admin.2026!` |
+| Aplicación web (administrador) | `admin.desarrollo@sigih.test` | `Admin.2026!` |
+| Aplicación web (almacén) | `almacen.demo@sigih.test` | `Admin.2026!` |
 | SQL Server (solo API) | `sigih_app` | `Sigih.App.2026!` |
 
 > El administrador lo crea `database/16_admin_inicial.sql` y se guarda con hash
-> Argon2id. Cambie la contraseña tras el primer inicio de sesión desde
-> **Usuarios**.
+> Argon2id. El usuario de almacén lo crea `database/18_seed_demo.sql` con el
+> mismo hash y el rol `ALMACEN`. Cambie ambas contraseñas tras el primer inicio
+> de sesión desde **Usuarios**.
 
 ### 7.2 Checklist de las 3 capas
 
@@ -481,7 +485,7 @@ Ejecute en orden. No avance si la capa anterior falla.
 | 1 | SQL Server | Servicio activo | `Get-Service *MSSQL*` | `Running` |
 | 2 | SQL Server | Conexión | `sqlcmd -S .\SQLEXPRESS -E -C -Q "SELECT 1"` | `1` |
 | 3 | SQL Server | Base creada | `SELECT name FROM sys.databases WHERE name='SIGIH'` | `SIGIH` |
-| 4 | SQL Server | Modelo completo | `INSTALAR_SIGIH.sql` | 11 tablas, 71 SPs, 3 roles, admin |
+| 4 | SQL Server | Modelo completo | `INSTALAR_SIGIH.sql` | 11 tablas, 71 SPs, 3 roles, admin y datos demo |
 | 5 | Backend | Dependencias | `uv sync` | Sin errores |
 | 6 | Backend | Arranque | `uv run uvicorn src.backend.main:app` | `Uvicorn running on ...:8000` |
 | 7 | Backend | Swagger | Abrir `/docs` | Todos los routers |
@@ -534,7 +538,7 @@ Si los 7 pasos funcionan, las tres capas están correctamente conectadas.
 
 ### 9.1 Ejecución individual de los scripts (mantenimiento)
 
-El instalador único es la vía recomendada. Si necesita ejecutar los 19 scripts
+El instalador único es la vía recomendada. Si necesita ejecutar los 20 scripts
 por separado, el orden es obligatorio:
 
 ```powershell
@@ -556,6 +560,7 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\14_seed_catalogos.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\15_seed_rbac.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\16_admin_inicial.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="Sigih.App.2026!"
+sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\18_seed_demo.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 ```
 
@@ -579,7 +584,8 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 | 16 | `15_seed_rbac.sql` | Roles y permisos |
 | 17 | `16_admin_inicial.sql` | Administrador inicial |
 | 18 | `17_permisos_app.sql` | Login/usuario `sigih_app` |
-| 19 | `99_verificar.sql` | Solo lectura: comprueba la instalación |
+| 19 | `18_seed_demo.sql` | Datos de demostración: catálogos, productos y movimientos |
+| 20 | `99_verificar.sql` | Solo lectura: comprueba la instalación |
 
 Todos son **idempotentes**: se pueden repetir sin duplicar datos.
 

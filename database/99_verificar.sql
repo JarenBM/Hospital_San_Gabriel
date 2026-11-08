@@ -78,4 +78,41 @@ UNION ALL SELECT 'Productos', COUNT(*) FROM dbo.Productos
 UNION ALL SELECT 'Lotes', COUNT(*) FROM dbo.Lotes
 UNION ALL SELECT 'Movimientos', COUNT(*) FROM dbo.Movimientos
 UNION ALL SELECT 'Usuarios', COUNT(*) FROM dbo.Usuarios;
+
+PRINT N'--- Datos de demostración ---';
+SELECT COUNT(DISTINCT p.id_producto) AS productos_activos,
+       COALESCE(SUM(l.stock_actual), 0) AS unidades_en_stock
+FROM dbo.Productos p
+LEFT JOIN dbo.Lotes l ON l.id_producto = p.id_producto
+WHERE p.activo = 1;
+
+SELECT
+    (SELECT COUNT(*)
+     FROM dbo.Lotes l
+     JOIN dbo.Productos p ON p.id_producto = l.id_producto
+     WHERE p.activo = 1
+       AND l.stock_actual > 0
+       AND l.fecha_vencimiento < CONVERT(date, GETDATE())) AS lotes_vencidos,
+    (SELECT COUNT(*)
+     FROM dbo.Lotes l
+     JOIN dbo.Productos p ON p.id_producto = l.id_producto
+     WHERE p.activo = 1
+       AND l.stock_actual > 0
+       AND l.fecha_vencimiento BETWEEN CONVERT(date, GETDATE())
+                                    AND DATEADD(day, 30, CONVERT(date, GETDATE()))) AS lotes_por_vencer,
+    (SELECT COUNT(*)
+     FROM dbo.Productos p
+     WHERE p.activo = 1
+       AND COALESCE((
+               SELECT SUM(CASE
+                              WHEN l.fecha_vencimiento IS NULL
+                                   OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                              THEN l.stock_actual
+                              ELSE 0
+                          END)
+               FROM dbo.Lotes l
+               WHERE l.id_producto = p.id_producto
+           ), 0) <= p.stock_minimo) AS productos_stock_bajo;
+
+EXEC dbo.sp_Dashboard_Resumen;
 GO
