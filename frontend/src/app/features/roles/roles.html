@@ -1,10 +1,15 @@
 <section class="sigih-pagina">
-  <header class="d-flex flex-wrap align-items-end justify-content-between gap-2">
-    <div>
-      <h2 class="sigih-titulo h5 mb-1">Roles y permisos</h2>
-      <p class="sigih-contador mb-0">
-        {{ rolesFiltrados().length }} de {{ roles.datos().length }} roles
-      </p>
+  <header>
+    <div class="sigih-cabecera">
+      <span class="sigih-cabecera__icono" aria-hidden="true">
+        <i class="bi bi-shield-lock"></i>
+      </span>
+      <div>
+        <h2 class="sigih-titulo h5 mb-1">Roles y permisos</h2>
+        <p class="sigih-contador mb-0">
+          {{ rolesFiltrados().length }} de {{ roles.datos().length }} roles
+        </p>
+      </div>
     </div>
     @if (puedeGestionar()) {
       <button type="button" class="btn btn-primary btn-sm" (click)="abrirAlta()">

@@ -1,7 +1,11 @@
+/* ============================================================
+   Movimientos de inventario
+   ============================================================ */
+
 .movimientos__cabecera {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
@@ -26,5 +30,15 @@
 
 .lotes__separador {
   margin: 0 0.15rem;
-  color: var(--sigih-texto-suave);
+  color: var(--sigih-texto-tenue);
+}
+
+@media (max-width: 575.98px) {
+  .movimientos__acciones {
+    width: 100%;
+  }
+
+  .movimientos__acciones .btn {
+    flex: 1 1 auto;
+  }
 }

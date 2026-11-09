@@ -8,7 +8,7 @@
 
 .roles__barra {
   width: 9rem;
-  height: 0.35rem;
+  height: 0.38rem;
   overflow: hidden;
   border-radius: 999px;
   background-color: var(--sigih-primario-claro);
@@ -18,7 +18,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-color: var(--sigih-primario);
+  background-image: linear-gradient(90deg, var(--sigih-primario), #149a8f);
   transition: width 180ms ease;
 }
 
@@ -29,18 +29,18 @@
 }
 
 .roles__grupo {
-  padding: 0.8rem 0.9rem;
+  padding: 0.85rem 0.95rem;
   border: 1px solid var(--sigih-borde);
-  border-radius: 0.75rem;
-  background-color: #fbfcfd;
+  border-radius: var(--sigih-radio);
+  background-color: var(--sigih-superficie-alt);
 }
 
 .roles__grupo-titulo {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.6rem;
   color: var(--sigih-primario-oscuro);
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 

@@ -7,44 +7,46 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.75rem;
-  font-size: 1.25rem;
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: var(--sigih-radio);
+  font-size: 1.28rem;
+  box-shadow: inset 0 0 0 1px rgb(16 42 54 / 4%);
 }
 
 .alertas__tarjeta-icono--ambar {
-  background-color: #fdf3df;
-  color: #a96d08;
+  background-color: var(--sigih-aviso-claro);
+  color: var(--sigih-aviso);
 }
 
 .alertas__tarjeta-icono--azul {
-  background-color: #e7f1fb;
-  color: #1d6fbf;
+  background-color: var(--sigih-info-claro);
+  color: var(--sigih-info);
 }
 
 .alertas__tarjeta-icono--rojo {
-  background-color: #fdeaea;
-  color: #c43c3c;
+  background-color: var(--sigih-peligro-claro);
+  color: var(--sigih-peligro);
 }
 
 .alertas__tarjeta-etiqueta {
   color: var(--sigih-texto-suave);
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .alertas__tarjeta-valor {
   color: var(--sigih-texto);
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.12;
+  font-variant-numeric: tabular-nums;
 }
 
 .alertas__tarjeta-pie {
-  color: var(--sigih-texto-suave);
+  color: var(--sigih-texto-tenue);
   font-size: 0.72rem;
 }
 
@@ -54,7 +56,7 @@
 }
 
 .alertas__deficit {
-  color: #c43c3c;
+  color: var(--sigih-peligro);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

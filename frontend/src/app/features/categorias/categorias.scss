@@ -13,7 +13,8 @@
 .categorias__titulo-grupo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.8rem;
+  min-width: 0;
 }
 
 .categorias__icono {
@@ -21,12 +22,13 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.65rem;
-  height: 2.65rem;
-  border-radius: 0.75rem;
-  background-color: var(--sigih-primario-claro);
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: var(--sigih-radio);
+  background: linear-gradient(145deg, var(--sigih-primario-claro), #d9f2ed);
   color: var(--sigih-primario-oscuro);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  box-shadow: inset 0 0 0 1px rgb(15 118 110 / 8%);
 }
 
 .categorias__subtitulo {
