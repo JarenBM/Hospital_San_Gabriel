@@ -1,0 +1,404 @@
+<section class="sigih-pagina">
+  <header>
+    <h1 class="h4 sigih-titulo mb-1">Reportes</h1>
+    <p class="sigih-texto-suave small mb-0">
+      Consulte el kardex de un producto o el ranking de mayores salidas del periodo.
+    </p>
+  </header>
+
+  <ul class="nav nav-tabs sigih-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        type="button"
+        class="nav-link"
+        role="tab"
+        [class.active]="pestana() === 'kardex'"
+        [attr.aria-selected]="pestana() === 'kardex'"
+        (click)="seleccionarPestana('kardex')"
+      >
+        <i class="bi bi-journal-text me-1"></i>
+        Kardex
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        type="button"
+        class="nav-link"
+        role="tab"
+        [class.active]="pestana() === 'mayores'"
+        [attr.aria-selected]="pestana() === 'mayores'"
+        (click)="seleccionarPestana('mayores')"
+      >
+        <i class="bi bi-graph-up-arrow me-1"></i>
+        Mayores salidas
+      </button>
+    </li>
+  </ul>
+
+  @if (pestana() === 'kardex') {
+    <div class="card sigih-card">
+      <div class="card-body">
+        <div class="sigih-filtros">
+          <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+            <label class="form-label" for="reportes-producto">Producto</label>
+            <select
+              id="reportes-producto"
+              class="form-select"
+              [class.is-invalid]="intentoKardex() && errorProducto() !== null"
+              [value]="idProducto() ?? ''"
+              (change)="actualizarProducto($event)"
+            >
+              <option value="">Seleccione un producto</option>
+              @for (producto of productosDisponibles(); track producto.id_producto) {
+                <option [value]="producto.id_producto">
+                  {{ producto.codigo }} — {{ producto.nombre }}
+                </option>
+              }
+            </select>
+            @if (intentoKardex() && errorProducto(); as error) {
+              <div class="sigih-form-error">{{ error }}</div>
+            }
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="reportes-desde">Desde</label>
+            <input
+              id="reportes-desde"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="intentoKardex() && errorRangoKardex() !== null"
+              [value]="desdeKardex()"
+              (change)="actualizarDesdeKardex($event)"
+            />
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="reportes-hasta">Hasta</label>
+            <input
+              id="reportes-hasta"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="intentoKardex() && errorRangoKardex() !== null"
+              [value]="hastaKardex()"
+              (change)="actualizarHastaKardex($event)"
+            />
+          </div>
+
+          <div class="sigih-filtros__campo flex-grow-0">
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              [disabled]="cargandoKardex()"
+              (click)="consultarKardex()"
+            >
+              @if (cargandoKardex()) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              } @else {
+                <i class="bi bi-search me-1"></i>
+              }
+              Consultar
+            </button>
+          </div>
+        </div>
+
+        @if (intentoKardex() && errorRangoKardex(); as error) {
+          <div class="sigih-form-error">{{ error }}</div>
+        }
+
+        @if (productos.error(); as error) {
+          <div class="alert alert-warning d-flex align-items-start gap-2 mt-3 mb-0" role="alert">
+            <i class="bi bi-exclamation-triangle mt-1"></i>
+            <div class="flex-grow-1">
+              <strong class="d-block">No se pudieron cargar los productos</strong>
+              <span class="small">{{ error.mensaje }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="recargarProductos()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+
+        @if (errorKardex(); as error) {
+          <div class="alert alert-danger d-flex align-items-start gap-2 mt-3 mb-0" role="alert">
+            <i class="bi bi-x-circle mt-1"></i>
+            <div>
+              <strong class="d-block">No se pudo consultar el kardex</strong>
+              <span class="small">{{ error }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (kardex().length === 0) {
+      <div class="card sigih-card">
+        <div class="card-body">
+          <div class="sigih-vacio">
+            <i class="bi bi-journal-text"></i>
+            @if (consultadoKardex()) {
+              <strong>Sin movimientos en el rango</strong>
+              <span class="small">
+                El producto seleccionado no registra movimientos entre las fechas indicadas.
+              </span>
+            } @else {
+              <strong>Seleccione un producto y consulte</strong>
+              <span class="small">
+                Elija un producto y un rango de fechas para ver su kardex.
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="row g-2">
+        <div class="col-sm-4">
+          <div class="card sigih-card h-100">
+            <div class="card-body py-3">
+              <span class="reportes__resumen-etiqueta">Entradas</span>
+              <p class="reportes__resumen-valor mb-0">
+                {{ formatearNumero(resumenKardex().entradas) }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card sigih-card h-100">
+            <div class="card-body py-3">
+              <span class="reportes__resumen-etiqueta">Salidas</span>
+              <p class="reportes__resumen-valor mb-0">
+                {{ formatearNumero(resumenKardex().salidas) }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card sigih-card h-100">
+            <div class="card-body py-3">
+              <span class="reportes__resumen-etiqueta">Movimientos</span>
+              <p class="reportes__resumen-valor mb-0">
+                {{ formatearNumero(resumenKardex().movimientos) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sigih-card overflow-hidden">
+        <div
+          class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between gap-2"
+        >
+          <div>
+            <strong>{{ productoSeleccionado()?.nombre ?? 'Kardex' }}</strong>
+            <span class="sigih-contador d-block">
+              {{ desdeKardex() }} — {{ hastaKardex() }}
+            </span>
+          </div>
+          <input
+            type="search"
+            class="form-control form-control-sm reportes__filtro-tabla"
+            placeholder="Filtrar movimientos"
+            autocomplete="off"
+            aria-label="Filtrar movimientos del kardex"
+            [value]="filtroKardex()"
+            (input)="actualizarFiltroKardex($event)"
+          />
+        </div>
+
+        @if (kardexFiltrado().length === 0) {
+          <div class="sigih-vacio">
+            <i class="bi bi-filter-circle"></i>
+            <strong>Sin coincidencias</strong>
+            <span class="small">Ningún movimiento coincide con el texto de filtro.</span>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle sigih-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Fecha y hora</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Lote</th>
+                  <th scope="col">Área</th>
+                  <th scope="col">Usuario</th>
+                  <th scope="col">Motivo</th>
+                  <th scope="col" class="text-end">Cantidad</th>
+                  <th scope="col" class="text-end">Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (movimiento of kardexFiltrado(); track movimiento.id_movimiento) {
+                  <tr>
+                    <td>{{ formatearFechaHora(movimiento.fecha_movimiento) }}</td>
+                    <td>
+                      @if (movimiento.tipo_movimiento === 'ENTRADA') {
+                        <span class="badge text-bg-success">ENTRADA</span>
+                      } @else {
+                        <span class="badge text-bg-warning">SALIDA</span>
+                      }
+                    </td>
+                    <td>{{ movimiento.numero_lote ?? '—' }}</td>
+                    <td>{{ movimiento.area ?? '—' }}</td>
+                    <td>{{ movimiento.usuario }}</td>
+                    <td>{{ movimiento.motivo }}</td>
+                    <td class="text-end">{{ formatearNumero(movimiento.cantidad) }}</td>
+                    <td class="text-end text-nowrap">
+                      <span class="sigih-codigo">{{ formatearNumero(movimiento.stock_anterior) }}</span>
+                      <i class="bi bi-arrow-right mx-1"></i>
+                      <span>{{ formatearNumero(movimiento.stock_posterior) }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <div class="card-footer bg-transparent">
+          <p class="sigih-contador mb-0">
+            {{ kardexFiltrado().length }} de {{ resumenKardex().movimientos }} movimientos
+          </p>
+        </div>
+      </div>
+    }
+  }
+
+  @if (pestana() === 'mayores') {
+    <div class="card sigih-card">
+      <div class="card-body">
+        <div class="sigih-filtros">
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mayores-desde">Desde</label>
+            <input
+              id="mayores-desde"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="intentoMayores() && errorRangoMayores() !== null"
+              [value]="desdeMayores()"
+              (change)="actualizarDesdeMayores($event)"
+            />
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mayores-hasta">Hasta</label>
+            <input
+              id="mayores-hasta"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="intentoMayores() && errorRangoMayores() !== null"
+              [value]="hastaMayores()"
+              (change)="actualizarHastaMayores($event)"
+            />
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mayores-top">Top</label>
+            <select
+              id="mayores-top"
+              class="form-select"
+              [value]="top()"
+              (change)="actualizarTop($event)"
+            >
+              <option [value]="10">10 productos</option>
+              <option [value]="25">25 productos</option>
+              <option [value]="50">50 productos</option>
+            </select>
+          </div>
+
+          <div class="sigih-filtros__campo flex-grow-0">
+            <button
+              type="button"
+              class="btn btn-primary w-100"
+              [disabled]="cargandoMayores()"
+              (click)="consultarMayores()"
+            >
+              @if (cargandoMayores()) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              } @else {
+                <i class="bi bi-search me-1"></i>
+              }
+              Consultar
+            </button>
+          </div>
+        </div>
+
+        @if (intentoMayores() && errorRangoMayores(); as error) {
+          <div class="sigih-form-error">{{ error }}</div>
+        }
+
+        @if (errorMayores(); as error) {
+          <div class="alert alert-danger d-flex align-items-start gap-2 mt-3 mb-0" role="alert">
+            <i class="bi bi-x-circle mt-1"></i>
+            <div>
+              <strong class="d-block">No se pudo consultar el reporte</strong>
+              <span class="small">{{ error }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (cargandoMayores() && mayores().length === 0) {
+      <div class="card sigih-card">
+        <div class="card-body">
+          <div class="sigih-vacio">
+            <span class="spinner-border spinner-border-sm"></span>
+            <span class="small">Calculando mayores salidas…</span>
+          </div>
+        </div>
+      </div>
+    } @else if (mayores().length === 0) {
+      <div class="card sigih-card">
+        <div class="card-body">
+          <div class="sigih-vacio">
+            <i class="bi bi-bar-chart"></i>
+            <strong>Sin salidas en el rango</strong>
+            <span class="small">
+              No se registraron salidas entre {{ desdeMayores() }} y {{ hastaMayores() }}.
+            </span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="card sigih-card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle sigih-tabla">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Código</th>
+                <th scope="col">Producto</th>
+                <th scope="col" class="text-end">Total salidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of mayores(); track item.id_producto; let indice = $index) {
+                <tr>
+                  <td class="reportes__ranking">{{ indice + 1 }}</td>
+                  <td>
+                    <span class="sigih-codigo">{{ item.codigo }}</span>
+                  </td>
+                  <td>{{ item.nombre }}</td>
+                  <td class="text-end">
+                    <span class="fw-semibold">{{ formatearNumero(item.total_salidas) }}</span>
+                    <div class="sigih-barra-progreso mt-1" aria-hidden="true">
+                      <span [style.width.%]="porcentaje(item.total_salidas)"></span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-transparent">
+          <p class="sigih-contador mb-0">
+            Top {{ top() }} · {{ mayores().length }} productos con salidas
+          </p>
+        </div>
+      </div>
+    }
+  }
+</section>

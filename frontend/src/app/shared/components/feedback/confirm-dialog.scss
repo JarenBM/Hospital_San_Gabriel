@@ -1,0 +1,61 @@
+.dialogo-confirmacion {
+  z-index: 1065;
+}
+
+.dialogo-confirmacion__backdrop {
+  z-index: 1060;
+}
+
+.dialogo-confirmacion .modal-dialog {
+  max-width: 30rem;
+}
+
+.dialogo-confirmacion__icono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 0.8rem;
+  font-size: 1.35rem;
+}
+
+.dialogo-confirmacion__icono--peligro {
+  background-color: #fdeaea;
+  color: #c43c3c;
+}
+
+.dialogo-confirmacion__icono--advertencia {
+  background-color: #fdf3df;
+  color: #a96d08;
+}
+
+.dialogo-confirmacion__icono--info {
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+}
+
+.dialogo-confirmacion__titulo {
+  margin: 0 0 0.35rem;
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.dialogo-confirmacion__mensaje {
+  margin: 0;
+  color: var(--sigih-texto);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.dialogo-confirmacion__detalle {
+  margin: 0.4rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  background-color: var(--sigih-superficie);
+  color: var(--sigih-texto-suave);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}

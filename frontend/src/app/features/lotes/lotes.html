@@ -1,0 +1,227 @@
+<section class="sigih-pagina">
+  <header class="lotes__cabecera">
+    <div>
+      <h2 class="h5 sigih-titulo mb-1">Lotes por producto</h2>
+      <p class="sigih-texto-suave small mb-0">
+        Consulte existencias y vencimientos por lote. El stock solo cambia con
+        entradas y salidas.
+      </p>
+    </div>
+  </header>
+
+  @if (!puedeLeer()) {
+    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-shield-lock"></i>
+      <span>No tiene permisos para consultar los lotes.</span>
+    </div>
+  } @else {
+    <article class="card sigih-card">
+      <div class="card-body">
+        <div class="sigih-filtros">
+          <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+            <label class="form-label" for="lotes-producto">Producto</label>
+            <select
+              id="lotes-producto"
+              class="form-select"
+              [value]="idProducto() ?? ''"
+              (change)="seleccionarProducto($event)"
+            >
+              <option value="">Seleccione un producto…</option>
+              @for (producto of productos(); track producto.id_producto) {
+                <option [value]="producto.id_producto">
+                  {{ producto.codigo }} · {{ producto.nombre }}
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (!cargandoProductos() && productos().length === 0) {
+          <p class="sigih-form-ayuda mb-0">
+            No hay productos activos disponibles para consultar.
+          </p>
+        }
+
+        @if (errorProductos(); as error) {
+          <div
+            class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mt-3 mb-0 py-2 px-3 small"
+            role="alert"
+          >
+            <i class="bi bi-exclamation-triangle"></i>
+            <span class="flex-grow-1">{{ error }}</span>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="reintentarProductos()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    </article>
+
+    @if (productoSeleccionado(); as producto) {
+      <article class="card sigih-card lotes__producto">
+        <div class="card-body">
+          <div class="lotes__producto-cabecera">
+            <div class="min-w-0">
+              <span class="sigih-codigo">{{ producto.codigo }}</span>
+              <h3 class="h6 mb-1">{{ producto.nombre }}</h3>
+              <p class="sigih-texto-suave small mb-0">
+                <i class="bi bi-tags me-1"></i>
+                {{ producto.categoria }}
+                <span class="lotes__separador">·</span>
+                {{ producto.unidad_medida }}
+              </p>
+            </div>
+            <span
+              class="badge"
+              [class.text-bg-success]="producto.maneja_lotes"
+              [class.text-bg-secondary]="!producto.maneja_lotes"
+            >
+              {{ producto.maneja_lotes ? 'Maneja lotes' : 'No maneja lotes' }}
+            </span>
+          </div>
+
+          <div class="lotes__metricas">
+            <div class="lotes__metrica">
+              <span class="lotes__metrica-etiqueta">Stock total</span>
+              <span class="lotes__metrica-valor">
+                {{ formatearNumero(producto.stock_total) }}
+              </span>
+            </div>
+            <div class="lotes__metrica">
+              <span class="lotes__metrica-etiqueta">Stock disponible</span>
+              <span class="lotes__metrica-valor">
+                {{ formatearNumero(producto.stock_disponible) }}
+              </span>
+            </div>
+            <div class="lotes__metrica">
+              <span class="lotes__metrica-etiqueta">Lotes registrados</span>
+              <span class="lotes__metrica-valor">
+                {{ formatearNumero(totalLotes()) }}
+              </span>
+            </div>
+            <div class="lotes__metrica">
+              <span class="lotes__metrica-etiqueta">Stock en lotes</span>
+              <span class="lotes__metrica-valor">
+                {{ formatearNumero(stockTotal()) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      @if (!producto.maneja_lotes) {
+        <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="alert">
+          <i class="bi bi-info-circle flex-shrink-0"></i>
+          <span>
+            Este producto no maneja lotes. Su stock se controla de forma general
+            y no requiere número de lote ni fecha de vencimiento.
+          </span>
+        </div>
+      }
+
+      <article class="card sigih-card">
+        <div
+          class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between gap-2"
+        >
+          <h3 class="h6 mb-0">Lotes registrados</h3>
+          <span class="sigih-contador">
+            {{ totalLotes() }} {{ totalLotes() === 1 ? 'lote' : 'lotes' }} ·
+            {{ formatearNumero(stockTotal()) }} unidades
+          </span>
+        </div>
+
+        @if (cargandoLotes()) {
+          <div class="sigih-vacio">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span>Cargando lotes…</span>
+          </div>
+        } @else if (errorLotes(); as error) {
+          <div class="p-3">
+            <div
+              class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mb-0 py-2 px-3 small"
+              role="alert"
+            >
+              <i class="bi bi-exclamation-triangle"></i>
+              <span class="flex-grow-1">{{ error }}</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="reintentarLotes()"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        } @else if (lotes().length === 0) {
+          <div class="sigih-vacio">
+            <i class="bi bi-box"></i>
+            <strong>Sin lotes registrados</strong>
+            <span>
+              @if (producto.maneja_lotes) {
+                Este producto todavía no tiene lotes. Registre una entrada para
+                crear el primero.
+              } @else {
+                Al no manejar lotes, este producto no genera registros de lote.
+              }
+            </span>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle sigih-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Número de lote</th>
+                  <th scope="col">Vencimiento</th>
+                  <th scope="col" class="text-end">Stock actual</th>
+                  <th scope="col">Fecha de registro</th>
+                  <th scope="col" class="text-end">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lote of lotes(); track lote.id_lote) {
+                  <tr>
+                    <td>
+                      @if (lote.numero_lote) {
+                        <span class="fw-semibold">{{ lote.numero_lote }}</span>
+                      } @else {
+                        <span class="sigih-texto-suave">Sin lote</span>
+                      }
+                    </td>
+                    <td class="text-nowrap">
+                      {{ formatearFecha(lote.fecha_vencimiento) }}
+                    </td>
+                    <td class="text-end sigih-moneda">
+                      {{ formatearNumero(lote.stock_actual) }}
+                    </td>
+                    <td class="text-nowrap sigih-texto-suave">
+                      {{ formatearFechaHora(lote.fecha_registro) }}
+                    </td>
+                    <td class="text-end">
+                      <span
+                        class="badge"
+                        [class.text-bg-danger]="lote.vencido"
+                        [class.text-bg-success]="!lote.vencido"
+                      >
+                        {{ lote.vencido ? 'Vencido' : 'Vigente' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </article>
+    } @else {
+      <div class="sigih-vacio card sigih-card">
+        <i class="bi bi-upc-scan"></i>
+        <strong>Seleccione un producto</strong>
+        <span>Elija un producto del listado para ver sus lotes y vencimientos.</span>
+      </div>
+    }
+  }
+</section>

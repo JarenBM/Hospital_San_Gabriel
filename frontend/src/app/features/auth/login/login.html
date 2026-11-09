@@ -1,0 +1,151 @@
+<main class="login">
+  <!-- ===================== Panel de marca ===================== -->
+  <section class="login__marca" aria-label="SIGIH">
+    <div class="login__marca-contenido">
+      <span class="login__eyebrow">
+        <i class="bi bi-hospital"></i>
+        Hospital San Gabriel
+      </span>
+
+      <h1 class="login__titulo">
+        Inventario hospitalario
+        <span>claro, trazable y seguro.</span>
+      </h1>
+
+      <p class="login__bajada">
+        Controle productos, lotes, entradas y salidas por área con trazabilidad
+        completa y alertas de vencimiento en tiempo real.
+      </p>
+
+      <ul class="login__beneficios">
+        <li>
+          <i class="bi bi-shield-check"></i>
+          <div>
+            <strong>Acceso basado en roles</strong>
+            <span>Permisos módulo:acción aplicados en cada endpoint.</span>
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-box-seam"></i>
+          <div>
+            <strong>Inventario trazable</strong>
+            <span>Cada movimiento queda auditado con su usuario y área.</span>
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-bell"></i>
+          <div>
+            <strong>Alertas oportunas</strong>
+            <span>Stock bajo, lotes por vencer y vencidos.</span>
+          </div>
+        </li>
+      </ul>
+
+      <p class="login__nota">
+        <i class="bi bi-lock"></i>
+        Acceso restringido al personal autorizado.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== Formulario ===================== -->
+  <section class="login__panel">
+    <div class="login__tarjeta card sigih-card">
+      <div class="card-body p-4 p-sm-5">
+        <div class="login__cabecera">
+          <span class="login__logo" aria-hidden="true">
+            <i class="bi bi-hospital"></i>
+          </span>
+          <div>
+            <h2 class="login__form-titulo">Iniciar sesión</h2>
+            <p class="login__form-sub">Ingrese sus credenciales institucionales.</p>
+          </div>
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-danger d-flex align-items-start gap-2 py-2 px-3 small" role="alert">
+            <i class="bi bi-exclamation-octagon flex-shrink-0"></i>
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <form (submit)="enviar($event)" novalidate>
+          <div class="mb-3">
+            <label for="email" class="form-label">Correo institucional</label>
+            <div class="input-group">
+              <span class="input-group-text" aria-hidden="true">
+                <i class="bi bi-envelope"></i>
+              </span>
+              <input
+                id="email"
+                type="email"
+                class="form-control"
+                placeholder="usuario@sigih.test"
+                autocomplete="username"
+                autofocus
+                [class.is-invalid]="loginForm.email().touched() && loginForm.email().invalid()"
+                [formField]="loginForm.email"
+              />
+            </div>
+            @if (loginForm.email().touched() && loginForm.email().invalid()) {
+              <div class="invalid-feedback d-block">
+                {{ loginForm.email().errors()[0]?.message }}
+              </div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text" aria-hidden="true">
+                <i class="bi bi-lock"></i>
+              </span>
+              <input
+                id="password"
+                [type]="mostrarPassword() ? 'text' : 'password'"
+                class="form-control"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                [class.is-invalid]="
+                  loginForm.password().touched() && loginForm.password().invalid()
+                "
+                [formField]="loginForm.password"
+              />
+              <button
+                type="button"
+                class="btn btn-outline-secondary login__ojo"
+                [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="alternarPassword()"
+              >
+                <i class="bi {{ mostrarPassword() ? 'bi-eye-slash' : 'bi-eye' }}"></i>
+              </button>
+            </div>
+            @if (loginForm.password().touched() && loginForm.password().invalid()) {
+              <div class="invalid-feedback d-block">
+                {{ loginForm.password().errors()[0]?.message }}
+              </div>
+            }
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 login__enviar" [disabled]="cargando()">
+            @if (cargando()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              Verificando credenciales…
+            } @else {
+              <i class="bi bi-box-arrow-in-right me-2"></i>
+              Iniciar sesión
+            }
+          </button>
+        </form>
+
+        <p class="login__ayuda">
+          ¿Olvidó su contraseña? Contacte al administrador del sistema.
+        </p>
+      </div>
+    </div>
+
+    <p class="login__pie">
+      © {{ anio }} SIGIH · Hospital San Gabriel
+    </p>
+  </section>
+</main>

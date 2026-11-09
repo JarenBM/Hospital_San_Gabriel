@@ -1,0 +1,26 @@
+.reportes__resumen-etiqueta {
+  display: block;
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reportes__resumen-valor {
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.reportes__filtro-tabla {
+  max-width: 16rem;
+}
+
+.reportes__ranking {
+  width: 3rem;
+  color: var(--sigih-texto-suave);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}

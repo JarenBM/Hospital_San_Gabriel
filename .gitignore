@@ -1,0 +1,43 @@
+# ============================================================================
+# SIGIH - Archivos que no deben versionarse
+# ============================================================================
+
+# Frontend: dependencias y artefactos de compilación
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/out-tsc/
+
+# Backend: entorno virtual y bytecode de Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Entornos que NO se versionan.
+# Nota: backend/.env SI se versiona a proposito, porque es un proyecto
+# academico y debe funcionar al clonar sin configuracion adicional.
+.env.local
+.env.production
+.env.development
+backend/.env.local
+backend/.env.production
+
+# Registros y temporales
+*.log
+tmp/
+logs/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

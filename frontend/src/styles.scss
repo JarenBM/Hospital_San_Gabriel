@@ -1,0 +1,307 @@
+/* ============================================================
+   SIGIH — Estilos globales
+   Bootstrap 5 y Bootstrap Icons se cargan desde angular.json.
+   ============================================================ */
+
+:root {
+  --sigih-primario: #0f6e6e;
+  --sigih-primario-oscuro: #0a5252;
+  --sigih-primario-claro: #e6f4f4;
+  --sigih-acento: #1d7fd4;
+  --sigih-superficie: #f6f8fa;
+  --sigih-borde: #dfe6ec;
+  --sigih-texto: #1f2d35;
+  --sigih-texto-suave: #5d6f7b;
+
+  --bs-primary: var(--sigih-primario);
+  --bs-primary-rgb: 15, 110, 110;
+  --bs-link-color: var(--sigih-primario);
+  --bs-link-hover-color: var(--sigih-primario-oscuro);
+  --bs-body-color: var(--sigih-texto);
+  --bs-body-bg: var(--sigih-superficie);
+  --bs-border-color: var(--sigih-borde);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--sigih-texto);
+  background-color: var(--sigih-superficie);
+  -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+  display: block;
+  min-height: 100dvh;
+}
+
+/* ---------- Utilidades reutilizables ---------- */
+
+.sigih-card {
+  border: 1px solid var(--sigih-borde);
+  border-radius: 0.85rem;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgb(16 42 54 / 6%);
+}
+
+.sigih-titulo {
+  color: var(--sigih-primario-oscuro);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sigih-texto-suave {
+  color: var(--sigih-texto-suave);
+}
+
+.sigih-badge-permiso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sigih-tabla {
+  --bs-table-hover-bg: var(--sigih-primario-claro);
+  margin-bottom: 0;
+}
+
+.sigih-tabla thead th {
+  border-bottom-width: 1px;
+  color: var(--sigih-texto-suave);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- Botones ---------- */
+
+.btn-primary {
+  --bs-btn-bg: var(--sigih-primario);
+  --bs-btn-border-color: var(--sigih-primario);
+  --bs-btn-hover-bg: var(--sigih-primario-oscuro);
+  --bs-btn-hover-border-color: var(--sigih-primario-oscuro);
+  --bs-btn-active-bg: var(--sigih-primario-oscuro);
+  --bs-btn-active-border-color: var(--sigih-primario-oscuro);
+  --bs-btn-disabled-bg: var(--sigih-primario);
+  --bs-btn-disabled-border-color: var(--sigih-primario);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sigih-primario);
+  --bs-btn-border-color: var(--sigih-primario);
+  --bs-btn-hover-bg: var(--sigih-primario);
+  --bs-btn-hover-border-color: var(--sigih-primario);
+  --bs-btn-active-bg: var(--sigih-primario-oscuro);
+  --bs-btn-active-border-color: var(--sigih-primario-oscuro);
+}
+
+/* ---------- Formularios ---------- */
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sigih-primario);
+  box-shadow: 0 0 0 0.2rem rgb(15 110 110 / 15%);
+}
+
+.form-label {
+  color: var(--sigih-texto-suave);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---------- Scrollbar ---------- */
+
+* {
+  scrollbar-color: #b9c7d1 transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+  background-color: #b9c7d1;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #97a9b6;
+}
+
+/* ---------- Accesibilidad ---------- */
+
+:focus-visible {
+  outline: 2px solid var(--sigih-acento);
+  outline-offset: 2px;
+}
+
+/* ---------- Páginas CRUD ---------- */
+
+.sigih-pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sigih-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.sigih-filtros__campo {
+  flex: 1 1 11rem;
+  min-width: 9rem;
+}
+
+.sigih-filtros__campo--amplio {
+  flex: 2 1 18rem;
+}
+
+.sigih-filtros__campo .form-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sigih-tabla td,
+.sigih-tabla th {
+  vertical-align: middle;
+}
+
+.sigih-tabla-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.sigih-tabla-acciones .btn {
+  --bs-btn-padding-y: 0.2rem;
+  --bs-btn-padding-x: 0.45rem;
+  --bs-btn-font-size: 0.78rem;
+}
+
+.sigih-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 2.4rem 1rem;
+  color: var(--sigih-texto-suave);
+  text-align: center;
+}
+
+.sigih-vacio i {
+  font-size: 1.7rem;
+  opacity: 0.55;
+}
+
+.sigih-vacio strong {
+  color: var(--sigih-texto);
+  font-size: 0.9rem;
+}
+
+.sigih-contador {
+  color: var(--sigih-texto-suave);
+  font-size: 0.75rem;
+}
+
+.sigih-tabs {
+  border-bottom-color: var(--sigih-borde);
+}
+
+.sigih-tabs .nav-link {
+  color: var(--sigih-texto-suave);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.sigih-tabs .nav-link:hover {
+  color: var(--sigih-primario-oscuro);
+}
+
+.sigih-tabs .nav-link.active {
+  color: var(--sigih-primario-oscuro);
+}
+
+.sigih-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sigih-form-error {
+  margin-top: 0.2rem;
+  color: #c43c3c;
+  font-size: 0.74rem;
+}
+
+.sigih-form-ayuda {
+  margin-top: 0.2rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+}
+
+.sigih-moneda {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sigih-codigo {
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: var(--sigih-texto-suave);
+  white-space: nowrap;
+}
+
+.sigih-barra-progreso {
+  height: 0.4rem;
+  border-radius: 999px;
+  background-color: var(--sigih-primario-claro);
+}
+
+.sigih-barra-progreso > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--sigih-primario);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

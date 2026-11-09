@@ -1,0 +1,111 @@
+/* ============================================================
+   Productos
+   ============================================================ */
+
+.productos__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.productos__titulo-grupo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.productos__icono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.75rem;
+  background-color: var(--sigih-primario-claro);
+  color: var(--sigih-primario-oscuro);
+  font-size: 1.2rem;
+}
+
+.productos__subtitulo {
+  color: var(--sigih-texto-suave);
+  font-size: 0.82rem;
+}
+
+.productos__limpiar {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+}
+
+.productos__aviso-categorias {
+  color: #a96d08;
+}
+
+.productos__carga {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1rem;
+}
+
+.productos__nombre {
+  display: block;
+  font-weight: 600;
+}
+
+.productos__descripcion {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 24rem;
+  margin-top: 0.1rem;
+  color: var(--sigih-texto-suave);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.productos__stock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.productos__stock-detalle {
+  color: var(--sigih-texto-suave);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.productos__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--sigih-borde);
+  border-radius: 0.6rem;
+  background-color: var(--sigih-superficie);
+}
+
+.productos__flags .form-check {
+  margin-bottom: 0;
+}
+
+@media (max-width: 575.98px) {
+  .productos__cabecera {
+    align-items: flex-start;
+  }
+
+  .productos__cabecera .btn {
+    width: 100%;
+  }
+
+  .productos__limpiar {
+    width: 100%;
+  }
+}

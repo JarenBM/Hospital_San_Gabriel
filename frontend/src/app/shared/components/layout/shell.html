@@ -1,0 +1,200 @@
+<div class="layout">
+  <!-- ===================== Sidebar ===================== -->
+  <aside
+    class="layout__sidebar"
+    [class.layout__sidebar--abierto]="menuAbierto()"
+    aria-label="Menú principal"
+  >
+    <div class="layout__marca">
+      <span class="layout__logo" aria-hidden="true">
+        <i class="bi bi-hospital"></i>
+      </span>
+      <div class="layout__marca-texto">
+        <span class="layout__marca-titulo">SIGIH</span>
+        <span class="layout__marca-sub">Hospital San Gabriel</span>
+      </div>
+      <button
+        type="button"
+        class="btn-close layout__cerrar-menu d-lg-none"
+        aria-label="Cerrar menú"
+        (click)="menuAbierto.set(false)"
+      ></button>
+    </div>
+
+    <div class="layout__usuario">
+      <span class="layout__avatar">{{ auth.iniciales() }}</span>
+      <div class="layout__usuario-texto">
+        <strong class="text-truncate">{{ auth.nombre() }}</strong>
+        <span class="text-truncate">{{ auth.rolActual() ?? 'Sin rol asignado' }}</span>
+      </div>
+    </div>
+
+    <nav class="layout__nav">
+      @for (grupo of grupos(); track grupo.titulo) {
+        <div class="layout__grupo">
+          <p class="layout__grupo-titulo">{{ grupo.titulo }}</p>
+          @for (opcion of grupo.opciones; track opcion.ruta) {
+            <a
+              class="layout__enlace"
+              [routerLink]="opcion.ruta"
+              routerLinkActive="layout__enlace--activo"
+              [routerLinkActiveOptions]="{ exact: !!opcion.exacto }"
+              (click)="menuAbierto.set(false)"
+            >
+              <i class="bi {{ opcion.icono }}" aria-hidden="true"></i>
+              <span>{{ opcion.etiqueta }}</span>
+            </a>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="layout__pie-sidebar">
+      <span class="layout__version">SIGIH · v0.2</span>
+      <span class="layout__pie-texto">Inventario hospitalario</span>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div
+      class="layout__backdrop d-lg-none"
+      role="presentation"
+      (click)="menuAbierto.set(false)"
+    ></div>
+  }
+
+  <!-- ===================== Contenido ===================== -->
+  <div class="layout__principal">
+    <header class="layout__navbar">
+      <button
+        type="button"
+        class="btn layout__boton-icono d-lg-none"
+        aria-label="Abrir menú"
+        (click)="menuAbierto.set(true)"
+      >
+        <i class="bi bi-list"></i>
+      </button>
+
+      <div class="layout__titulos">
+        <h1 class="layout__titulo">{{ tituloPagina() }}</h1>
+        <p class="layout__subtitulo d-none d-md-block">{{ descripcionPagina() }}</p>
+      </div>
+
+      <div class="layout__acciones">
+        <!-- Notificaciones -->
+        <div class="layout__menu" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="btn layout__boton-icono"
+            [attr.aria-expanded]="notificacionesAbiertas()"
+            aria-label="Notificaciones"
+            (click)="alternarNotificaciones()"
+          >
+            <i class="bi bi-bell"></i>
+            @if (notificaciones.total() > 0) {
+              <span class="layout__contador">{{ notificaciones.total() }}</span>
+            }
+          </button>
+
+          @if (notificacionesAbiertas()) {
+            <div class="layout__panel layout__panel--notificaciones">
+              <div class="layout__panel-cabecera">
+                <span>Notificaciones</span>
+                @if (notificaciones.hayNotificaciones()) {
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm p-0"
+                    (click)="notificaciones.limpiar()"
+                  >
+                    Limpiar
+                  </button>
+                }
+              </div>
+
+              <div class="layout__panel-cuerpo">
+                @if (notificaciones.hayNotificaciones()) {
+                  @for (item of notificaciones.notificaciones(); track item.id) {
+                    <article [class]="'layout__notificacion layout__notificacion--' + item.tipo">
+                      <i class="bi {{ iconoNotificacion(item.tipo) }}" aria-hidden="true"></i>
+                      <div class="flex-grow-1">
+                        <strong class="d-block small">{{ item.titulo }}</strong>
+                        <span class="layout__notificacion-mensaje">{{ item.mensaje }}</span>
+                        @if (item.detalle) {
+                          <span class="layout__notificacion-detalle">{{ item.detalle }}</span>
+                        }
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-close btn-close-sm"
+                        aria-label="Descartar notificación"
+                        (click)="descartarNotificacion(item.id)"
+                      ></button>
+                    </article>
+                  }
+                } @else {
+                  <div class="layout__vacio">
+                    <i class="bi bi-bell-slash"></i>
+                    <span>Sin notificaciones pendientes</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Perfil -->
+        <div class="layout__menu" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="layout__perfil"
+            [attr.aria-expanded]="perfilAbierto()"
+            aria-label="Menú de usuario"
+            (click)="alternarPerfil()"
+          >
+            <span class="layout__avatar layout__avatar--navbar">{{ auth.iniciales() }}</span>
+            <span class="layout__perfil-texto d-none d-md-flex">
+              <strong>{{ auth.nombre() }}</strong>
+              <small>{{ auth.rolActual() ?? 'Sin rol' }}</small>
+            </span>
+            <i class="bi bi-chevron-down layout__chevron d-none d-md-inline"></i>
+          </button>
+
+          @if (perfilAbierto()) {
+            <div class="layout__panel layout__panel--perfil">
+              <div class="layout__perfil-cabecera">
+                <span class="layout__avatar layout__avatar--grande">{{ auth.iniciales() }}</span>
+                <div class="min-w-0">
+                  <strong class="d-block text-truncate">{{ auth.nombre() }}</strong>
+                  <span class="layout__perfil-email text-truncate">{{ auth.email() }}</span>
+                </div>
+              </div>
+
+              <div class="layout__perfil-meta">
+                <span class="badge text-bg-primary">{{ auth.rolActual() ?? 'Sin rol' }}</span>
+                <span class="layout__perfil-permisos">
+                  {{ auth.permisos().length }} permisos
+                </span>
+              </div>
+
+              <hr class="my-2" />
+
+              <button type="button" class="layout__salir" (click)="cerrarSesion()">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="layout__contenido">
+      <router-outlet />
+    </main>
+
+    <footer class="layout__footer">
+      <span>© {{ anio }} SIGIH · Hospital San Gabriel</span>
+      <span class="d-none d-sm-inline">Angular + FastAPI + SQL Server</span>
+    </footer>
+  </div>
+</div>

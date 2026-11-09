@@ -1,0 +1,64 @@
+/* ============================================================
+   Alertas de inventario
+   ============================================================ */
+
+.alertas__tarjeta-icono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.alertas__tarjeta-icono--ambar {
+  background-color: #fdf3df;
+  color: #a96d08;
+}
+
+.alertas__tarjeta-icono--azul {
+  background-color: #e7f1fb;
+  color: #1d6fbf;
+}
+
+.alertas__tarjeta-icono--rojo {
+  background-color: #fdeaea;
+  color: #c43c3c;
+}
+
+.alertas__tarjeta-etiqueta {
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.alertas__tarjeta-valor {
+  color: var(--sigih-texto);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.alertas__tarjeta-pie {
+  color: var(--sigih-texto-suave);
+  font-size: 0.72rem;
+}
+
+.alertas__producto {
+  color: var(--sigih-texto);
+  font-weight: 600;
+}
+
+.alertas__deficit {
+  color: #c43c3c;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sigih-tabs .badge {
+  font-weight: 600;
+}

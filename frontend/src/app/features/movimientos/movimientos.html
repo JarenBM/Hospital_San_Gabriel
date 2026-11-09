@@ -1,0 +1,617 @@
+<section class="sigih-pagina">
+  <header class="movimientos__cabecera">
+    <div>
+      <h2 class="h5 sigih-titulo mb-1">Movimientos de inventario</h2>
+      <p class="sigih-texto-suave small mb-0">
+        Consulte el historial y registre entradas o salidas con trazabilidad por
+        lote, área y usuario.
+      </p>
+    </div>
+    <div class="movimientos__acciones">
+      @if (puedeEntrada()) {
+        <button type="button" class="btn btn-primary btn-sm" (click)="abrirEntrada()">
+          <i class="bi bi-box-arrow-in-down me-1"></i>
+          Registrar entrada
+        </button>
+      }
+      @if (puedeSalida()) {
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="abrirSalida()">
+          <i class="bi bi-box-arrow-up me-1"></i>
+          Registrar salida
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (!puedeLeer()) {
+    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-shield-lock"></i>
+      <span>No tiene permisos para consultar el historial de movimientos.</span>
+    </div>
+  } @else {
+    <article class="card sigih-card">
+      <div class="card-body">
+        <form class="sigih-filtros" (submit)="$event.preventDefault()">
+          <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+            <label class="form-label" for="mov-busqueda">Buscar</label>
+            <div class="input-group">
+              <span class="input-group-text" aria-hidden="true">
+                <i class="bi bi-search"></i>
+              </span>
+              <input
+                id="mov-busqueda"
+                type="search"
+                class="form-control"
+                placeholder="Producto, código, lote, motivo o usuario"
+                [value]="busqueda()"
+                (input)="actualizarBusqueda($event)"
+              />
+            </div>
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mov-tipo">Tipo</label>
+            <select
+              id="mov-tipo"
+              class="form-select"
+              [value]="tipoFiltro()"
+              (change)="actualizarTipoFiltro($event)"
+            >
+              @for (tipo of tiposFiltro; track tipo) {
+                <option [value]="tipo">
+                  {{ tipo === 'TODOS' ? 'Todos' : tipo }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mov-area">Área</label>
+            <select
+              id="mov-area"
+              class="form-select"
+              [value]="idAreaFiltro() ?? ''"
+              (change)="actualizarAreaFiltro($event)"
+            >
+              <option value="">Todas las áreas</option>
+              @for (area of areas(); track area.id_area) {
+                <option [value]="area.id_area">{{ area.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mov-desde">Desde</label>
+            <input
+              id="mov-desde"
+              type="date"
+              class="form-control"
+              [value]="desde()"
+              (input)="actualizarDesde($event)"
+            />
+          </div>
+
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="mov-hasta">Hasta</label>
+            <input
+              id="mov-hasta"
+              type="date"
+              class="form-control"
+              [value]="hasta()"
+              (input)="actualizarHasta($event)"
+            />
+          </div>
+        </form>
+
+        @if (rangoInvalido()) {
+          <div
+            class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2 px-3 small"
+            role="alert"
+          >
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>
+              La fecha «desde» no puede ser posterior a la fecha «hasta». El
+              rango de fechas no se aplicará.
+            </span>
+          </div>
+        }
+      </div>
+    </article>
+
+    <article class="card sigih-card">
+      <div
+        class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between gap-2"
+      >
+        <h3 class="h6 mb-0">Historial de movimientos</h3>
+        <span class="sigih-contador">
+          {{ movimientosFiltrados().length }} de {{ totalMovimientos() }}
+          movimientos
+        </span>
+      </div>
+
+      @if (movimientos.cargando() && movimientos.datos().length === 0) {
+        <div class="sigih-vacio">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Cargando movimientos…</span>
+        </div>
+      } @else if (movimientos.error(); as error) {
+        <div class="p-3">
+          <div
+            class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mb-0 py-2 px-3 small"
+            role="alert"
+          >
+            <i class="bi bi-exclamation-triangle"></i>
+            <div class="flex-grow-1">
+              <strong class="d-block">No se pudo cargar el historial</strong>
+              <span>{{ error.mensaje }}</span>
+              @if (error.detalle) {
+                <span class="d-block">{{ error.detalle }}</span>
+              }
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="recargarHistorial()"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      } @else if (totalMovimientos() === 0) {
+        <div class="sigih-vacio">
+          <i class="bi bi-arrow-left-right"></i>
+          <strong>Sin movimientos registrados</strong>
+          <span>Aún no se han registrado entradas ni salidas de inventario.</span>
+        </div>
+      } @else if (movimientosFiltrados().length === 0) {
+        <div class="sigih-vacio">
+          <i class="bi bi-funnel"></i>
+          <strong>Sin coincidencias</strong>
+          <span>Ningún movimiento coincide con los filtros aplicados.</span>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle sigih-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Fecha y hora</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Producto</th>
+                <th scope="col">Lote</th>
+                <th scope="col">Vencimiento</th>
+                <th scope="col">Área</th>
+                <th scope="col">Usuario</th>
+                <th scope="col" class="text-end">Cantidad</th>
+                <th scope="col">Motivo</th>
+                <th scope="col" class="text-end">Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (movimiento of movimientosFiltrados(); track movimiento.id_movimiento) {
+                <tr>
+                  <td class="text-nowrap">
+                    {{ formatearFechaHora(movimiento.fecha_movimiento) }}
+                  </td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.text-bg-success]="movimiento.tipo_movimiento === 'ENTRADA'"
+                      [class.text-bg-info]="movimiento.tipo_movimiento === 'SALIDA'"
+                    >
+                      {{ movimiento.tipo_movimiento }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="d-block">{{ movimiento.producto }}</span>
+                    <span class="sigih-codigo">{{ movimiento.codigo }}</span>
+                  </td>
+                  <td>
+                    @if (movimiento.numero_lote) {
+                      {{ movimiento.numero_lote }}
+                    } @else {
+                      <span class="sigih-texto-suave">Sin lote</span>
+                    }
+                  </td>
+                  <td class="text-nowrap">
+                    {{ formatearFecha(movimiento.fecha_vencimiento) }}
+                  </td>
+                  <td>{{ movimiento.area ?? '—' }}</td>
+                  <td>{{ movimiento.usuario }}</td>
+                  <td class="text-end fw-semibold">
+                    {{ formatearNumero(movimiento.cantidad) }}
+                  </td>
+                  <td class="movimientos__motivo">{{ movimiento.motivo }}</td>
+                  <td class="text-end text-nowrap movimientos__stock">
+                    <span class="text-muted">
+                      {{ formatearNumero(movimiento.stock_anterior) }}
+                    </span>
+                    <i class="bi bi-arrow-right mx-1" aria-hidden="true"></i>
+                    <span class="fw-semibold">
+                      {{ formatearNumero(movimiento.stock_posterior) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </article>
+  }
+</section>
+
+<!-- ===================== Entrada ===================== -->
+@if (modalEntrada()) {
+  <app-modal
+    titulo="Registrar entrada"
+    subtitulo="Incremente el stock de un producto y registre su lote."
+    tamano="lg"
+    (cerrar)="cerrarEntrada()"
+  >
+    <form (submit)="enviarEntrada($event)" novalidate>
+      @if (!cargandoProductos() && productos().length === 0) {
+        <div class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 small" role="alert">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>No hay productos activos disponibles para registrar entradas.</span>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="form-label" for="entrada-producto">
+          Producto <span class="text-danger">*</span>
+        </label>
+        <select
+          id="entrada-producto"
+          class="form-select"
+          [class.is-invalid]="intentoEntrada() && erroresEntrada().idProducto !== null"
+          [value]="idProductoEntrada() ?? ''"
+          [disabled]="guardando()"
+          (change)="cambiarProductoEntrada($event)"
+        >
+          <option value="">Seleccione un producto…</option>
+          @for (producto of productos(); track producto.id_producto) {
+            <option [value]="producto.id_producto">
+              {{ producto.codigo }} · {{ producto.nombre }}
+            </option>
+          }
+        </select>
+        @if (intentoEntrada() && erroresEntrada().idProducto) {
+          <div class="sigih-form-error">{{ erroresEntrada().idProducto }}</div>
+        }
+      </div>
+
+      @if (productoEntrada(); as producto) {
+        <p class="sigih-form-ayuda">
+          <i class="bi bi-box-seam me-1"></i>
+          Stock disponible: {{ formatearNumero(producto.stock_disponible) }}
+          {{ producto.unidad_medida }}
+          <span class="lotes__separador">·</span>
+          {{ producto.maneja_lotes ? 'Maneja lotes' : 'No maneja lotes' }}
+          @if (producto.requiere_vencimiento) {
+            <span class="lotes__separador">·</span>
+            Requiere vencimiento
+          }
+        </p>
+      }
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label" for="entrada-cantidad">
+            Cantidad <span class="text-danger">*</span>
+          </label>
+          <input
+            id="entrada-cantidad"
+            type="number"
+            class="form-control"
+            min="1"
+            step="1"
+            placeholder="0"
+            [class.is-invalid]="intentoEntrada() && erroresEntrada().cantidad !== null"
+            [value]="cantidadEntrada()"
+            [disabled]="guardando()"
+            (input)="actualizarCantidadEntrada($event)"
+          />
+          @if (intentoEntrada() && erroresEntrada().cantidad) {
+            <div class="sigih-form-error">{{ erroresEntrada().cantidad }}</div>
+          }
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label" for="entrada-motivo">
+            Motivo <span class="text-danger">*</span>
+          </label>
+          <select
+            id="entrada-motivo"
+            class="form-select"
+            [class.is-invalid]="intentoEntrada() && erroresEntrada().motivo !== null"
+            [value]="motivoEntrada()"
+            [disabled]="guardando()"
+            (change)="actualizarMotivoEntrada($event)"
+          >
+            <option value="">Seleccione un motivo…</option>
+            @for (motivo of motivosEntrada; track motivo) {
+              <option [value]="motivo">{{ motivo }}</option>
+            }
+          </select>
+          @if (intentoEntrada() && erroresEntrada().motivo) {
+            <div class="sigih-form-error">{{ erroresEntrada().motivo }}</div>
+          }
+        </div>
+
+        @if (productoEntrada()?.maneja_lotes) {
+          <div class="col-12">
+            <label class="form-label" for="entrada-lote">
+              Número de lote <span class="text-danger">*</span>
+            </label>
+            <input
+              id="entrada-lote"
+              type="text"
+              class="form-control"
+              maxlength="50"
+              placeholder="Ej. L-2026-001"
+              [class.is-invalid]="intentoEntrada() && erroresEntrada().numeroLote !== null"
+              [value]="numeroLoteEntrada()"
+              [disabled]="guardando()"
+              (input)="actualizarNumeroLoteEntrada($event)"
+            />
+            @if (intentoEntrada() && erroresEntrada().numeroLote) {
+              <div class="sigih-form-error">{{ erroresEntrada().numeroLote }}</div>
+            }
+          </div>
+        }
+
+        @if (productoEntrada()?.maneja_lotes || productoEntrada()?.requiere_vencimiento) {
+          <div class="col-sm-6">
+            <label class="form-label" for="entrada-vencimiento">
+              Fecha de vencimiento
+              @if (productoEntrada()?.requiere_vencimiento) {
+                <span class="text-danger">*</span>
+              }
+            </label>
+            <input
+              id="entrada-vencimiento"
+              type="date"
+              class="form-control"
+              [min]="hoy"
+              [class.is-invalid]="
+                intentoEntrada() && erroresEntrada().fechaVencimiento !== null
+              "
+              [value]="fechaVencimientoEntrada()"
+              [disabled]="guardando()"
+              (input)="actualizarFechaVencimientoEntrada($event)"
+            />
+            @if (intentoEntrada() && erroresEntrada().fechaVencimiento) {
+              <div class="sigih-form-error">{{ erroresEntrada().fechaVencimiento }}</div>
+            }
+            <p class="sigih-form-ayuda mb-0">
+              @if (productoEntrada()?.requiere_vencimiento) {
+                Obligatoria para este producto y no anterior a hoy.
+              } @else {
+                Opcional. No puede ser anterior a hoy.
+              }
+            </p>
+          </div>
+        }
+      </div>
+
+      @if (productoEntrada() && !productoEntrada()?.maneja_lotes) {
+        <p class="sigih-form-ayuda mb-0">
+          Este producto no maneja lotes; la entrada se registrará en un lote
+          general.
+        </p>
+      }
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        [disabled]="guardando()"
+        (click)="cerrarEntrada()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardando()"
+        (click)="enviarEntrada()"
+      >
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Registrando…
+        } @else {
+          <i class="bi bi-box-arrow-in-down me-1"></i>
+          Registrar entrada
+        }
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- ===================== Salida ===================== -->
+@if (modalSalida()) {
+  <app-modal
+    titulo="Registrar salida"
+    subtitulo="Descuente stock de un lote y asígnelo a un área."
+    tamano="lg"
+    (cerrar)="cerrarSalida()"
+  >
+    <form (submit)="enviarSalida($event)" novalidate>
+      @if (!cargandoProductos() && productos().length === 0) {
+        <div class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 small" role="alert">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>No hay productos activos disponibles para registrar salidas.</span>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="form-label" for="salida-producto">
+          Producto <span class="text-danger">*</span>
+        </label>
+        <select
+          id="salida-producto"
+          class="form-select"
+          [class.is-invalid]="intentoSalida() && erroresSalida().idProducto !== null"
+          [value]="idProductoSalida() ?? ''"
+          [disabled]="guardando()"
+          (change)="cambiarProductoSalida($event)"
+        >
+          <option value="">Seleccione un producto…</option>
+          @for (producto of productos(); track producto.id_producto) {
+            <option [value]="producto.id_producto">
+              {{ producto.codigo }} · {{ producto.nombre }}
+            </option>
+          }
+        </select>
+        @if (intentoSalida() && erroresSalida().idProducto) {
+          <div class="sigih-form-error">{{ erroresSalida().idProducto }}</div>
+        }
+      </div>
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label" for="salida-lote">
+            Lote <span class="text-danger">*</span>
+          </label>
+          <select
+            id="salida-lote"
+            class="form-select"
+            [class.is-invalid]="intentoSalida() && erroresSalida().idLote !== null"
+            [value]="idLoteSalida() ?? ''"
+            [disabled]="
+              idProductoSalida() === null || cargandoLotesSalida() || guardando()
+            "
+            (change)="cambiarLoteSalida($event)"
+          >
+            <option value="">Seleccione un lote…</option>
+            @for (lote of lotesSalida(); track lote.id_lote) {
+              <option [value]="lote.id_lote">{{ etiquetaLote(lote) }}</option>
+            }
+          </select>
+          @if (intentoSalida() && erroresSalida().idLote) {
+            <div class="sigih-form-error">{{ erroresSalida().idLote }}</div>
+          }
+
+          @if (cargandoLotesSalida()) {
+            <p class="sigih-form-ayuda mb-0">
+              <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              Cargando lotes…
+            </p>
+          } @else if (errorLotesSalida(); as error) {
+            <div class="alert alert-warning mt-2 mb-0 py-2 px-3 small" role="alert">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              {{ error }}
+            </div>
+          } @else if (idProductoSalida() !== null && lotesSalida().length === 0) {
+            <div class="alert alert-warning mt-2 mb-0 py-2 px-3 small" role="alert">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              Este producto no tiene lotes vigentes con stock disponible.
+            </div>
+          }
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label" for="salida-area">
+            Área <span class="text-danger">*</span>
+          </label>
+          <select
+            id="salida-area"
+            class="form-select"
+            [class.is-invalid]="intentoSalida() && erroresSalida().idArea !== null"
+            [value]="idAreaSalida() ?? ''"
+            [disabled]="guardando()"
+            (change)="cambiarAreaSalida($event)"
+          >
+            <option value="">Seleccione un área…</option>
+            @for (area of areasActivas(); track area.id_area) {
+              <option [value]="area.id_area">{{ area.nombre }}</option>
+            }
+          </select>
+          @if (intentoSalida() && erroresSalida().idArea) {
+            <div class="sigih-form-error">{{ erroresSalida().idArea }}</div>
+          }
+          @if (!cargandoAreas() && areasActivas().length === 0) {
+            <p class="sigih-form-ayuda mb-0">No hay áreas activas disponibles.</p>
+          }
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label" for="salida-cantidad">
+            Cantidad <span class="text-danger">*</span>
+          </label>
+          <input
+            id="salida-cantidad"
+            type="number"
+            class="form-control"
+            min="1"
+            step="1"
+            placeholder="0"
+            [class.is-invalid]="intentoSalida() && erroresSalida().cantidad !== null"
+            [attr.max]="stockMaximo() > 0 ? stockMaximo() : null"
+            [value]="cantidadSalida()"
+            [disabled]="guardando()"
+            (input)="actualizarCantidadSalida($event)"
+          />
+          @if (intentoSalida() && erroresSalida().cantidad) {
+            <div class="sigih-form-error">{{ erroresSalida().cantidad }}</div>
+          }
+          @if (loteSalida(); as lote) {
+            <p class="sigih-form-ayuda mb-0">
+              <i class="bi bi-box-seam me-1"></i>
+              Disponible en el lote:
+              <strong>{{ formatearNumero(lote.stock_actual) }}</strong>
+              {{ productoSalida()?.unidad_medida }}
+            </p>
+          }
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label" for="salida-motivo">
+            Motivo <span class="text-danger">*</span>
+          </label>
+          <input
+            id="salida-motivo"
+            type="text"
+            class="form-control"
+            maxlength="200"
+            placeholder="Ej. Consumo en emergencia"
+            [class.is-invalid]="intentoSalida() && erroresSalida().motivo !== null"
+            [value]="motivoSalida()"
+            [disabled]="guardando()"
+            (input)="actualizarMotivoSalida($event)"
+          />
+          @if (intentoSalida() && erroresSalida().motivo) {
+            <div class="sigih-form-error">{{ erroresSalida().motivo }}</div>
+          }
+          <p class="sigih-form-ayuda mb-0">{{ motivoSalida().length }}/200 caracteres</p>
+        </div>
+      </div>
+    </form>
+
+    <div modalPie class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        [disabled]="guardando()"
+        (click)="cerrarSalida()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="guardando()"
+        (click)="enviarSalida()"
+      >
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          Registrando…
+        } @else {
+          <i class="bi bi-box-arrow-up me-1"></i>
+          Registrar salida
+        }
+      </button>
+    </div>
+  </app-modal>
+}

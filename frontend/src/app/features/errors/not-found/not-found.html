@@ -1,0 +1,29 @@
+<main class="error">
+  <div class="error__tarjeta card sigih-card">
+    <div class="card-body p-4 p-sm-5">
+      <span class="error__codigo">404</span>
+      <span class="error__icono" aria-hidden="true">
+        <i class="bi bi-compass"></i>
+      </span>
+
+      <h1 class="error__titulo">Página no encontrada</h1>
+
+      <p class="error__mensaje">
+        La dirección que intentó abrir no existe o fue movida. Verifique el
+        enlace o regrese al inicio del sistema.
+      </p>
+
+      <div class="error__acciones">
+        <a class="btn btn-primary" [routerLink]="rutaInicio()">
+          <i class="bi" [class]="autenticado() ? 'bi-house-door' : 'bi-box-arrow-in-right'"></i>
+          <span class="ms-2">{{ autenticado() ? 'Volver al inicio' : 'Ir al inicio de sesión' }}</span>
+        </a>
+      </div>
+
+      <p class="error__nota">
+        <i class="bi bi-info-circle me-1"></i>
+        SIGIH · Sistema de Gestión de Inventario Hospitalario
+      </p>
+    </div>
+  </div>
+</main>

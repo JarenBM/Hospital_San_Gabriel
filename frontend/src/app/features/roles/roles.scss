@@ -1,0 +1,100 @@
+/* ============================================================
+   Roles y permisos
+   ============================================================ */
+
+.roles__descripcion {
+  max-width: 26rem;
+}
+
+.roles__barra {
+  width: 9rem;
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--sigih-primario-claro);
+}
+
+.roles__barra > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--sigih-primario);
+  transition: width 180ms ease;
+}
+
+.roles__permisos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.9rem;
+}
+
+.roles__grupo {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--sigih-borde);
+  border-radius: 0.75rem;
+  background-color: #fbfcfd;
+}
+
+.roles__grupo-titulo {
+  margin: 0 0 0.55rem;
+  color: var(--sigih-primario-oscuro);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.roles__grupo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.roles__opcion {
+  margin: 0;
+  padding-left: 1.65rem;
+}
+
+.roles__opcion .form-check-input {
+  cursor: pointer;
+}
+
+.roles__opcion .form-check-label {
+  cursor: pointer;
+}
+
+.roles__codigo {
+  display: block;
+  color: var(--sigih-texto);
+  font-family: 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.roles__detalle {
+  display: block;
+  color: var(--sigih-texto-suave);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.sigih-filtros__campo--auto {
+  flex: 0 0 auto;
+  min-width: auto;
+}
+
+@media (max-width: 575.98px) {
+  .roles__descripcion {
+    max-width: none;
+  }
+
+  .roles__barra {
+    width: 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roles__barra > span {
+    transition: none;
+  }
+}

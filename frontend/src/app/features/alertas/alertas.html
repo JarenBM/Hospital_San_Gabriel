@@ -1,0 +1,386 @@
+<section class="sigih-pagina">
+  <header>
+    <h1 class="h4 sigih-titulo mb-1">Alertas de inventario</h1>
+    <p class="sigih-texto-suave small mb-0">
+      Productos bajo el stock mínimo y lotes próximos a vencer o ya vencidos.
+    </p>
+  </header>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <article class="card sigih-card h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <span class="alertas__tarjeta-icono alertas__tarjeta-icono--ambar">
+            <i class="bi bi-box-seam"></i>
+          </span>
+          <div>
+            <p class="alertas__tarjeta-etiqueta mb-0">Stock bajo</p>
+            <p class="alertas__tarjeta-valor mb-0">{{ formatearNumero(totalStockBajo()) }}</p>
+            <p class="alertas__tarjeta-pie mb-0">Productos bajo el mínimo</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-md-4">
+      <article class="card sigih-card h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <span class="alertas__tarjeta-icono alertas__tarjeta-icono--azul">
+            <i class="bi bi-hourglass-split"></i>
+          </span>
+          <div>
+            <p class="alertas__tarjeta-etiqueta mb-0">Por vencer</p>
+            <p class="alertas__tarjeta-valor mb-0">{{ formatearNumero(totalPorVencer()) }}</p>
+            <p class="alertas__tarjeta-pie mb-0">Lotes dentro de la ventana</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-md-4">
+      <article class="card sigih-card h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <span class="alertas__tarjeta-icono alertas__tarjeta-icono--rojo">
+            <i class="bi bi-calendar-x"></i>
+          </span>
+          <div>
+            <p class="alertas__tarjeta-etiqueta mb-0">Vencidos</p>
+            <p class="alertas__tarjeta-valor mb-0">{{ formatearNumero(totalVencidos()) }}</p>
+            <p class="alertas__tarjeta-pie mb-0">Lotes con existencias vencidas</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <div class="card sigih-card">
+    <div class="card-header bg-transparent px-3 pt-3 pb-0">
+      <ul class="nav nav-tabs sigih-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            type="button"
+            class="nav-link"
+            role="tab"
+            [class.active]="pestana() === 'stock-bajo'"
+            [attr.aria-selected]="pestana() === 'stock-bajo'"
+            (click)="seleccionarPestana('stock-bajo')"
+          >
+            <i class="bi bi-box-seam me-1"></i>
+            Stock bajo
+            <span class="badge rounded-pill text-bg-secondary ms-1">{{ totalStockBajo() }}</span>
+          </button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button
+            type="button"
+            class="nav-link"
+            role="tab"
+            [class.active]="pestana() === 'por-vencer'"
+            [attr.aria-selected]="pestana() === 'por-vencer'"
+            (click)="seleccionarPestana('por-vencer')"
+          >
+            <i class="bi bi-hourglass-split me-1"></i>
+            Por vencer
+            <span class="badge rounded-pill text-bg-secondary ms-1">{{ totalPorVencer() }}</span>
+          </button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button
+            type="button"
+            class="nav-link"
+            role="tab"
+            [class.active]="pestana() === 'vencidos'"
+            [attr.aria-selected]="pestana() === 'vencidos'"
+            (click)="seleccionarPestana('vencidos')"
+          >
+            <i class="bi bi-calendar-x me-1"></i>
+            Vencidos
+            <span class="badge rounded-pill text-bg-secondary ms-1">{{ totalVencidos() }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-body">
+      <div class="sigih-filtros mb-3">
+        <div class="sigih-filtros__campo sigih-filtros__campo--amplio">
+          <label class="form-label" for="alertas-busqueda">Buscar</label>
+          <input
+            id="alertas-busqueda"
+            type="search"
+            class="form-control"
+            autocomplete="off"
+            [placeholder]="placeholderBusqueda()"
+            [value]="busqueda()"
+            (input)="actualizarBusqueda($event)"
+          />
+        </div>
+
+        @if (pestana() === 'por-vencer') {
+          <div class="sigih-filtros__campo">
+            <label class="form-label" for="alertas-dias">Días para vencer</label>
+            <div class="input-group">
+              <input
+                id="alertas-dias"
+                type="number"
+                class="form-control"
+                min="0"
+                max="3650"
+                step="1"
+                inputmode="numeric"
+                [class.is-invalid]="errorDias() !== null"
+                [value]="valorDias()"
+                (input)="actualizarDias($event)"
+              />
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                [disabled]="!formularioValido() || porVencer.cargando()"
+                (click)="actualizarPorVencer()"
+              >
+                @if (porVencer.cargando()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                } @else {
+                  <i class="bi bi-arrow-clockwise me-1"></i>
+                }
+                Actualizar
+              </button>
+            </div>
+            @if (errorDias(); as error) {
+              <div class="sigih-form-error">{{ error }}</div>
+            } @else {
+              <div class="sigih-form-ayuda">Ventana entre 0 y 3650 días.</div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (pestana() === 'stock-bajo') {
+        @if (stockBajo.error(); as error) {
+          <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle mt-1"></i>
+            <div class="flex-grow-1">
+              <strong class="d-block">No se pudo cargar el stock bajo</strong>
+              <span class="small">{{ error.mensaje }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="recargarStockBajo()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+
+        @if (stockBajo.cargando() && stockBajo.datos().length === 0) {
+          <div class="sigih-vacio">
+            <span class="spinner-border spinner-border-sm"></span>
+            <span class="small">Cargando productos con stock bajo…</span>
+          </div>
+        } @else if (stockBajoFiltrado().length === 0) {
+          <div class="sigih-vacio">
+            <i class="bi bi-check2-circle"></i>
+            @if (hayBusqueda()) {
+              <strong>Sin coincidencias</strong>
+              <span class="small">Ningún producto coincide con la búsqueda.</span>
+            } @else {
+              <strong>No hay productos con stock bajo</strong>
+              <span class="small">Todos los productos superan su stock mínimo.</span>
+            }
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle sigih-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col">Código</th>
+                  <th scope="col" class="text-end">Stock mínimo</th>
+                  <th scope="col" class="text-end">Stock disponible</th>
+                  <th scope="col" class="text-end">Déficit</th>
+                  <th scope="col" class="text-center">Alerta</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of stockBajoFiltrado(); track item.id_producto) {
+                  <tr>
+                    <td>
+                      <span class="alertas__producto">{{ item.nombre }}</span>
+                    </td>
+                    <td>
+                      <span class="sigih-codigo">{{ item.codigo }}</span>
+                    </td>
+                    <td class="text-end">{{ formatearNumero(item.stock_minimo) }}</td>
+                    <td class="text-end">{{ formatearNumero(item.stock_disponible) }}</td>
+                    <td class="text-end">
+                      <span class="alertas__deficit">
+                        {{ formatearNumero(item.stock_minimo - item.stock_disponible) }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge text-bg-danger">Crítico</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="sigih-contador mt-2 mb-0">
+            {{ stockBajoFiltrado().length }} de {{ totalStockBajo() }} productos
+          </p>
+        }
+      }
+
+      @if (pestana() === 'por-vencer') {
+        @if (porVencer.error(); as error) {
+          <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle mt-1"></i>
+            <div class="flex-grow-1">
+              <strong class="d-block">No se pudieron cargar los lotes por vencer</strong>
+              <span class="small">{{ error.mensaje }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="recargarPorVencer()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+
+        @if (porVencer.cargando() && porVencer.datos().length === 0) {
+          <div class="sigih-vacio">
+            <span class="spinner-border spinner-border-sm"></span>
+            <span class="small">Cargando lotes por vencer…</span>
+          </div>
+        } @else if (porVencerFiltrado().length === 0) {
+          <div class="sigih-vacio">
+            <i class="bi bi-calendar-check"></i>
+            @if (hayBusqueda()) {
+              <strong>Sin coincidencias</strong>
+              <span class="small">Ningún lote coincide con la búsqueda.</span>
+            } @else {
+              <strong>No hay lotes por vencer</strong>
+              <span class="small">
+                Ningún lote vence en los próximos {{ valorDias() || 0 }} días.
+              </span>
+            }
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle sigih-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col">Código</th>
+                  <th scope="col">Lote</th>
+                  <th scope="col">Vencimiento</th>
+                  <th scope="col" class="text-end">Stock</th>
+                  <th scope="col" class="text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lote of porVencerFiltrado(); track lote.codigo + '-' + (lote.numero_lote ?? '')) {
+                  <tr>
+                    <td>
+                      <span class="alertas__producto">{{ lote.nombre }}</span>
+                    </td>
+                    <td>
+                      <span class="sigih-codigo">{{ lote.codigo }}</span>
+                    </td>
+                    <td>{{ lote.numero_lote ?? '—' }}</td>
+                    <td>{{ formatearFecha(lote.fecha_vencimiento) }}</td>
+                    <td class="text-end">{{ formatearNumero(lote.stock_actual) }}</td>
+                    <td class="text-center">
+                      <span class="badge text-bg-warning">{{ lote.estado }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="sigih-contador mt-2 mb-0">
+            {{ porVencerFiltrado().length }} de {{ totalPorVencer() }} lotes
+          </p>
+        }
+      }
+
+      @if (pestana() === 'vencidos') {
+        @if (vencidos.error(); as error) {
+          <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle mt-1"></i>
+            <div class="flex-grow-1">
+              <strong class="d-block">No se pudieron cargar los lotes vencidos</strong>
+              <span class="small">{{ error.mensaje }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="recargarVencidos()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+
+        @if (vencidos.cargando() && vencidos.datos().length === 0) {
+          <div class="sigih-vacio">
+            <span class="spinner-border spinner-border-sm"></span>
+            <span class="small">Cargando lotes vencidos…</span>
+          </div>
+        } @else if (vencidosFiltrado().length === 0) {
+          <div class="sigih-vacio">
+            <i class="bi bi-calendar-check"></i>
+            @if (hayBusqueda()) {
+              <strong>Sin coincidencias</strong>
+              <span class="small">Ningún lote coincide con la búsqueda.</span>
+            } @else {
+              <strong>No hay lotes vencidos</strong>
+              <span class="small">No se encontraron lotes con existencias vencidas.</span>
+            }
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle sigih-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col">Código</th>
+                  <th scope="col">Lote</th>
+                  <th scope="col">Vencimiento</th>
+                  <th scope="col" class="text-end">Stock</th>
+                  <th scope="col" class="text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lote of vencidosFiltrado(); track lote.codigo + '-' + (lote.numero_lote ?? '')) {
+                  <tr>
+                    <td>
+                      <span class="alertas__producto">{{ lote.nombre }}</span>
+                    </td>
+                    <td>
+                      <span class="sigih-codigo">{{ lote.codigo }}</span>
+                    </td>
+                    <td>{{ lote.numero_lote ?? '—' }}</td>
+                    <td>{{ formatearFecha(lote.fecha_vencimiento) }}</td>
+                    <td class="text-end">{{ formatearNumero(lote.stock_actual) }}</td>
+                    <td class="text-center">
+                      <span class="badge text-bg-danger">{{ lote.estado }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="sigih-contador mt-2 mb-0">
+            {{ vencidosFiltrado().length }} de {{ totalVencidos() }} lotes
+          </p>
+        }
+      }
+    </div>
+  </div>
+</section>

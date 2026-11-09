@@ -1,0 +1,60 @@
+/* ============================================================
+   Lotes por producto
+   ============================================================ */
+
+.lotes__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.lotes__producto {
+  border-left: 4px solid var(--sigih-primario);
+}
+
+.lotes__producto-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.lotes__separador {
+  margin: 0 0.2rem;
+}
+
+.lotes__metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.lotes__metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--sigih-borde);
+  border-radius: 0.65rem;
+  background-color: #fbfcfd;
+}
+
+.lotes__metrica-etiqueta {
+  color: var(--sigih-texto-suave);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lotes__metrica-valor {
+  color: var(--sigih-texto);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
