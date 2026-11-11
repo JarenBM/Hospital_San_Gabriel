@@ -53,9 +53,11 @@ El layout `src/` es obligatorio: el paquete debe seguir en `src/backend/` porque
 - `sp_Productos_Actualizar` no recibe `@maneja_lotes` ni `@requiere_vencimiento`: esos dos flags solo se fijan al crear. No los añadas al schema de `PUT`, serían ignorados.
 - **Las transacciones de stock viven en los SP**, no en Python: `sp_Movimientos_RegistrarEntrada` y `sp_Movimientos_RegistrarSalida` usan `BEGIN TRAN`/`COMMIT` con `XACT_ABORT` y `ROLLBACK` en el `CATCH`. El repository solo ejecuta `EXEC`, sin `commit()` ni transacción propia. No dupliques esa lógica.
 - `id_usuario` **no viaja en el body**: entradas y salidas lo toman del usuario autenticado por el token. `EntradaCrear` y `SalidaCrear` usan `extra="forbid"`, así que enviar `id_usuario` responde 422. Los SP siguen exigiendo que el usuario exista y esté activo (`dbo.Usuarios.activo=1`).
-- `dbo.Usuarios` se llena con `sp_Usuarios_Crear` (requiere `password_hash`). No crear usuarios de prueba automáticamente.
+- `SalidaCrear.id_lote` es **opcional**: si llega `null`, `sp_Movimientos_RegistrarSalida` aplica FEFO y elige el lote vigente con vencimiento más próximo que cubra la cantidad (si ningún lote individual alcanza responde 51209 → 409). El resultado devuelve `id_lote` y `numero_lote`.
+- Un lote vence al terminar el día anterior: `fecha_vencimiento <= hoy` es VENCIDO y no se puede despachar (`51208`), ni suma al stock disponible.
+- `dbo.Usuarios` se llena con `sp_Usuarios_Crear` (requiere `password_hash`). No crear usuarios de prueba automáticamente. La cuenta semilla `admin.desarrollo@sigih.test` no se puede desactivar, cambiar de correo ni perder el rol ADMINISTRADOR (`52005` → 409).
 - Los `Decimal` (precio, valor referencial) se serializan en el JSON como **string** (`"15.00"`), no como número: es el comportamiento de Pydantic v2 y ya está así en Productos. No lo cambies solo en un módulo; el frontend debe convertirlo.
-- `sp_Lotes_Vencimientos` no tiene cota inferior de fecha: con `dias=0` devuelve todos los lotes vencidos con existencias, por antiguos que sean. Filtra `p.activo=1`, así que los lotes vencidos de productos inactivos no aparecen. El resumen (`sp_Dashboard_Resumen`) siempre cuenta los próximos a vencer en una ventana fija de 30 días.
+- `sp_Alertas_PorVencer` no tiene cota inferior: con `dias=0` devuelve todos los lotes vencidos con existencias (incluidos los que vencen hoy), por antiguos que sean. Filtra `p.activo=1`, así que los lotes vencidos de productos inactivos no aparecen. El resumen (`sp_Dashboard_Resumen`) cuenta los próximos a vencer entre mañana y 30 días.
 
 ## Autenticación
 - `POST /api/auth/login` usa `OAuth2PasswordRequestForm`: el formulario llega como `application/x-www-form-urlencoded` con `username` (el correo) y `password`. Swagger lo aprovecha con el botón Authorize; el frontend Angular debe enviarlo igual, no como JSON.
@@ -92,9 +94,13 @@ Esta sección reemplaza las restricciones de alcance anteriores.
 - Endpoints nuevos: `/api/usuarios`, `/api/roles`, `/api/permisos`,
   CRUD completo de `/api/areas`, `/api/dashboard` y `/api/reportes`.
 - `GET /api/auth/me` devuelve también `roles` y `permisos`.
-- Auditoría best-effort en cada escritura; el listado de auditoría queda
-  diferido.
-- Conflictos 409: producto con existencias, categoría con productos activos
-  y último administrador activo.
+- Auditoría: usuarios, roles, catálogos y productos usan
+  `sp_Auditoria_Registrar` best-effort; **entradas y salidas** insertan su
+  auditoría (`id_usuario`, `accion`, `modulo`, `id_registro`, `id_area`,
+  `detalle`) dentro de la misma transacción del SP, por lo que la cobertura es
+  total. El listado de auditoría sigue diferido.
+- Conflictos 409: producto con existencias, categoría con productos activos,
+  área con movimientos registrados, cuenta semilla protegida y último
+  administrador activo.
 - `sp_Productos_Actualizar` acepta `@activo`, pero el schema `PUT` no lo
   expone: el backend envía `NULL` para conservar el estado.

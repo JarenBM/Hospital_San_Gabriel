@@ -32,7 +32,9 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
     if tipo == "lote_vencido":
         return LoteVencido("El lote está vencido")
     if tipo == "stock_insuficiente":
-        return StockInsuficiente("No hay existencias suficientes en el lote")
+        return StockInsuficiente(
+            "No hay existencias suficientes en el lote o en los lotes vigentes"
+        )
     if tipo == "usuario_invalido":
         return ReferenciaInvalida("El usuario no existe o está inactivo")
     if tipo == "producto_invalido":
@@ -72,13 +74,16 @@ def registrar_entrada(
 
 def registrar_salida(
     id_producto: int,
-    id_lote: int,
+    id_lote: int | None,
     id_usuario: int,
     id_area: int,
     cantidad: int,
     motivo: str,
 ) -> dict:
-    """Ejecuta dbo.sp_Movimientos_RegistrarSalida."""
+    """Ejecuta dbo.sp_Movimientos_RegistrarSalida.
+
+    Con ``id_lote=None`` el procedimiento aplica FEFO y elige el lote.
+    """
     try:
         fila = ejecutar_uno(
             Sp.MOVIMIENTOS_REGISTRAR_SALIDA,

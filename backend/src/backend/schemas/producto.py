@@ -3,7 +3,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 # Límites reales de las columnas del producto.
 Codigo = Annotated[
@@ -81,6 +81,8 @@ class ProductoActualizar(BaseModel):
     actualiza y aceptarlos aquí los ignoraría en silencio. Tampoco incluye
     ``activo``: no existe reactivación de productos.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     id_categoria: IdCategoria
     codigo: Codigo

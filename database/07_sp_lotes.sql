@@ -22,7 +22,7 @@ BEGIN
            stock_actual,
            fecha_registro,
            CASE
-               WHEN fecha_vencimiento < CONVERT(date, GETDATE()) THEN 1
+               WHEN fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 1
                ELSE 0
            END AS vencido
     FROM dbo.Lotes
@@ -44,7 +44,7 @@ BEGIN
            stock_actual,
            fecha_registro,
            CASE
-               WHEN fecha_vencimiento < CONVERT(date, GETDATE()) THEN 1
+               WHEN fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 1
                ELSE 0
            END AS vencido
     FROM dbo.Lotes

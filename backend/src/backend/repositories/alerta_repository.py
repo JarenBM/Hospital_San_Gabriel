@@ -26,7 +26,8 @@ def listar_lotes_vencimientos(dias: int) -> list[dict]:
     """Ejecuta dbo.sp_Alertas_PorVencer y devuelve PROXIMO y VENCIDO.
 
     El SP no tiene cota inferior: con ``dias=0`` incluye todos los lotes
-    vencidos con existencias, sin importar cuán antiguos sean.
+    vencidos con existencias (incluidos los que vencen hoy), sin importar
+    cuán antiguos sean.
     """
     try:
         return ejecutar_lista(Sp.ALERTAS_POR_VENCER, {"dias": dias})

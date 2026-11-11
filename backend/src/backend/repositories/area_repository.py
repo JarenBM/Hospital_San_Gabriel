@@ -2,7 +2,12 @@
 
 import pyodbc
 
-from backend.errors import AreaDuplicada, AreaNoEncontrada, DatosInvalidos
+from backend.errors import (
+    AreaDuplicada,
+    AreaNoEncontrada,
+    ConflictoEstado,
+    DatosInvalidos,
+)
 from backend.repositories.base import (
     ejecutar_accion,
     ejecutar_escalar,
@@ -20,6 +25,10 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
         return AreaDuplicada("Ya existe un área con ese nombre")
     if tipo == "no_encontrado":
         return AreaNoEncontrada("El área no existe")
+    if tipo == "conflicto_area":
+        return ConflictoEstado(
+            "El área tiene movimientos registrados y no se puede desactivar"
+        )
     if tipo == "datos_invalidos":
         return DatosInvalidos("Los datos del área no son válidos")
     return error

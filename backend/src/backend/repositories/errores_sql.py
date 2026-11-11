@@ -18,7 +18,9 @@ _TIPOS: tuple[tuple[str, frozenset[str]], ...] = (
     # Conflictos de estado que el cliente debe resolver.
     ("conflicto_stock", frozenset({"51009"})),
     ("conflicto_categoria", frozenset({"51404"})),
+    ("conflicto_area", frozenset({"51504"})),
     ("ultimo_admin", frozenset({"52004"})),
+    ("cuenta_protegida", frozenset({"52005"})),
     ("rol_protegido", frozenset({"52103"})),
     # Datos inválidos de entrada.
     ("datos_invalidos",

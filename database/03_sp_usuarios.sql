@@ -183,6 +183,19 @@ BEGIN
        OR NULLIF(TRIM(@email), N'') IS NULL
         THROW 52001, N'Datos de usuario incompletos', 1;
 
+    -- La cuenta semilla no se desactiva ni cambia de correo: es el acceso de
+    -- recuperación del sistema y los tokens dependen de ese ``sub``.
+    IF EXISTS (
+        SELECT 1 FROM dbo.Usuarios
+        WHERE id_usuario = @id_usuario
+          AND email = N'admin.desarrollo@sigih.test'
+    )
+       AND (
+           @activo = 0
+           OR TRIM(@email) <> N'admin.desarrollo@sigih.test'
+       )
+        THROW 52005, N'La cuenta semilla no se puede desactivar ni cambiar de correo', 1;
+
     IF @activo = 0
        AND EXISTS (
            SELECT 1
@@ -218,6 +231,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    IF EXISTS (
+        SELECT 1 FROM dbo.Usuarios
+        WHERE id_usuario = @id_usuario
+          AND email = N'admin.desarrollo@sigih.test'
+    )
+        THROW 52005, N'La cuenta semilla no se puede desactivar', 1;
 
     IF EXISTS (
            SELECT 1
@@ -327,6 +347,17 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM dbo.Usuarios WHERE id_usuario = @id_usuario)
         THROW 52003, N'Usuario no encontrado', 1;
+
+    IF EXISTS (
+           SELECT 1 FROM dbo.Usuarios
+           WHERE id_usuario = @id_usuario
+             AND email = N'admin.desarrollo@sigih.test'
+       )
+       AND EXISTS (
+           SELECT 1 FROM dbo.Roles
+           WHERE id_rol = @id_rol AND nombre = N'ADMINISTRADOR'
+       )
+        THROW 52005, N'La cuenta semilla debe conservar el rol ADMINISTRADOR', 1;
 
     IF EXISTS (
            SELECT 1

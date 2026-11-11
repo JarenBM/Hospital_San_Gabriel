@@ -26,7 +26,8 @@ export interface EntradaCrear {
 /** Cuerpo de ``POST /api/movimientos/salidas``. */
 export interface SalidaCrear {
   id_producto: Id;
-  id_lote: Id;
+  /** ``null`` deja que el backend elija el lote por FEFO. */
+  id_lote?: Id | null;
   id_area: Id;
   cantidad: number;
   motivo: string;
@@ -43,6 +44,8 @@ export interface EntradaRegistrada {
 /** Resultado de ``POST /api/movimientos/salidas``. */
 export interface SalidaRegistrada {
   id_movimiento: Id;
+  id_lote: Id;
+  numero_lote: string | null;
   stock_anterior: number;
   stock_posterior: number;
 }

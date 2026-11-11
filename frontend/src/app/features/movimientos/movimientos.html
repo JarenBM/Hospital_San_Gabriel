@@ -448,7 +448,7 @@
 @if (modalSalida()) {
   <app-modal
     titulo="Registrar salida"
-    subtitulo="Descuente stock de un lote y asígnelo a un área."
+    subtitulo="Descuente stock y asígnelo a un área. Si no elige lote, se aplica FEFO."
     tamano="lg"
     (cerrar)="cerrarSalida()"
   >
@@ -486,26 +486,25 @@
 
       <div class="row g-3">
         <div class="col-sm-6">
-          <label class="form-label" for="salida-lote">
-            Lote <span class="text-danger">*</span>
-          </label>
+          <label class="form-label" for="salida-lote"> Lote </label>
           <select
             id="salida-lote"
             class="form-select"
-            [class.is-invalid]="intentoSalida() && erroresSalida().idLote !== null"
             [value]="idLoteSalida() ?? ''"
             [disabled]="
               idProductoSalida() === null || cargandoLotesSalida() || guardando()
             "
             (change)="cambiarLoteSalida($event)"
           >
-            <option value="">Seleccione un lote…</option>
+            <option value="">Automático (FEFO)</option>
             @for (lote of lotesSalida(); track lote.id_lote) {
               <option [value]="lote.id_lote">{{ etiquetaLote(lote) }}</option>
             }
           </select>
-          @if (intentoSalida() && erroresSalida().idLote) {
-            <div class="sigih-form-error">{{ erroresSalida().idLote }}</div>
+          @if (idLoteSalida() === null) {
+            <p class="sigih-form-ayuda mb-0">
+              Se usará el lote vigente con el vencimiento más próximo.
+            </p>
           }
 
           @if (cargandoLotesSalida()) {
@@ -576,6 +575,13 @@
               <i class="bi bi-box-seam me-1"></i>
               Disponible en el lote:
               <strong>{{ formatearNumero(lote.stock_actual) }}</strong>
+              {{ productoSalida()?.unidad_medida }}
+            </p>
+          } @else if (stockMaximo() > 0) {
+            <p class="sigih-form-ayuda mb-0">
+              <i class="bi bi-box-seam me-1"></i>
+              Mayor existencia en un lote vigente:
+              <strong>{{ formatearNumero(stockMaximo()) }}</strong>
               {{ productoSalida()?.unidad_medida }}
             </p>
           }

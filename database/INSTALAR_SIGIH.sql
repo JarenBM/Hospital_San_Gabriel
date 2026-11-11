@@ -341,11 +341,21 @@ BEGIN
         accion       NVARCHAR(50) NOT NULL,
         modulo       NVARCHAR(50) NOT NULL,
         id_registro  NVARCHAR(50) NULL,
+        id_area      INT NULL
+            CONSTRAINT FK_Auditoria_Areas REFERENCES dbo.AreasHospitalarias(id_area),
         detalle      NVARCHAR(500) NULL,
         ip           NVARCHAR(45) NULL,
         fecha        DATETIME2 NOT NULL
             CONSTRAINT DF_Auditoria_Fecha DEFAULT (SYSDATETIME())
     );
+END;
+GO
+
+-- Migración idempotente para instalaciones previas sin id_area.
+IF COL_LENGTH(N'dbo.Auditoria', N'id_area') IS NULL
+BEGIN
+    ALTER TABLE dbo.Auditoria ADD id_area INT NULL
+        CONSTRAINT FK_Auditoria_Areas REFERENCES dbo.AreasHospitalarias(id_area);
 END;
 GO
 
@@ -449,10 +459,27 @@ GO
 CREATE OR ALTER PROCEDURE dbo.sp_Usuarios_Listar
     @busqueda     NVARCHAR(150) = NULL,
     @id_rol       INT           = NULL,
-    @solo_activos BIT           = NULL
+    @solo_activos BIT           = NULL,
+    @pagina       INT           = NULL,
+    @tamano       INT           = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT u.id_usuario,
            u.nombre,
@@ -467,7 +494,8 @@ BEGIN
                    JOIN dbo.Roles r ON r.id_rol = ur.id_rol
                    WHERE ur.id_usuario = u.id_usuario
                ) x
-           ) AS roles
+           ) AS roles,
+           COUNT(*) OVER () AS total
     FROM dbo.Usuarios u
     WHERE (@busqueda IS NULL
            OR u.nombre LIKE N'%' + @busqueda + N'%'
@@ -480,7 +508,8 @@ BEGIN
                WHERE ur2.id_usuario = u.id_usuario
                  AND ur2.id_rol = @id_rol
            ))
-    ORDER BY u.nombre;
+    ORDER BY u.nombre
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 
@@ -543,6 +572,19 @@ BEGIN
        OR NULLIF(TRIM(@email), N'') IS NULL
         THROW 52001, N'Datos de usuario incompletos', 1;
 
+    -- La cuenta semilla no se desactiva ni cambia de correo: es el acceso de
+    -- recuperación del sistema y los tokens dependen de ese ``sub``.
+    IF EXISTS (
+        SELECT 1 FROM dbo.Usuarios
+        WHERE id_usuario = @id_usuario
+          AND email = N'admin.desarrollo@sigih.test'
+    )
+       AND (
+           @activo = 0
+           OR TRIM(@email) <> N'admin.desarrollo@sigih.test'
+       )
+        THROW 52005, N'La cuenta semilla no se puede desactivar ni cambiar de correo', 1;
+
     IF @activo = 0
        AND EXISTS (
            SELECT 1
@@ -578,6 +620,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    IF EXISTS (
+        SELECT 1 FROM dbo.Usuarios
+        WHERE id_usuario = @id_usuario
+          AND email = N'admin.desarrollo@sigih.test'
+    )
+        THROW 52005, N'La cuenta semilla no se puede desactivar', 1;
 
     IF EXISTS (
            SELECT 1
@@ -687,6 +736,17 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM dbo.Usuarios WHERE id_usuario = @id_usuario)
         THROW 52003, N'Usuario no encontrado', 1;
+
+    IF EXISTS (
+           SELECT 1 FROM dbo.Usuarios
+           WHERE id_usuario = @id_usuario
+             AND email = N'admin.desarrollo@sigih.test'
+       )
+       AND EXISTS (
+           SELECT 1 FROM dbo.Roles
+           WHERE id_rol = @id_rol AND nombre = N'ADMINISTRADOR'
+       )
+        THROW 52005, N'La cuenta semilla debe conservar el rol ADMINISTRADOR', 1;
 
     IF EXISTS (
            SELECT 1
@@ -1292,7 +1352,7 @@ BEGIN
            stock_actual,
            fecha_registro,
            CASE
-               WHEN fecha_vencimiento < CONVERT(date, GETDATE()) THEN 1
+               WHEN fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 1
                ELSE 0
            END AS vencido
     FROM dbo.Lotes
@@ -1314,7 +1374,7 @@ BEGIN
            stock_actual,
            fecha_registro,
            CASE
-               WHEN fecha_vencimiento < CONVERT(date, GETDATE()) THEN 1
+               WHEN fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 1
                ELSE 0
            END AS vencido
     FROM dbo.Lotes
@@ -1448,6 +1508,25 @@ BEGIN
 
         DECLARE @id_movimiento INT = CAST(SCOPE_IDENTITY() AS INT);
 
+        -- Auditoría dentro de la misma transacción: si el movimiento se
+        -- confirma, su rastro también; si se revierte, no queda registro.
+        INSERT dbo.Auditoria
+        (
+            id_usuario, accion, modulo, id_registro, detalle
+        )
+        VALUES
+        (
+            @id_usuario,
+            N'ENTRADA',
+            N'movimientos',
+            CAST(@id_movimiento AS NVARCHAR(50)),
+            LEFT(CONCAT(
+                N'Producto: ', @id_producto,
+                N', lote: ', COALESCE(@numero_lote, N'sin lote'),
+                N', cantidad: ', @cantidad
+            ), 500)
+        );
+
         COMMIT;
 
         SELECT @id_movimiento AS id_movimiento,
@@ -1464,11 +1543,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_Movimientos_RegistrarSalida
     @id_producto INT,
-    @id_lote     INT,
     @id_usuario  INT,
     @id_area     INT,
     @cantidad    INT,
-    @motivo      NVARCHAR(200)
+    @motivo      NVARCHAR(200),
+    @id_lote     INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1477,6 +1556,7 @@ BEGIN
     DECLARE @requiere BIT,
             @stock_lote INT,
             @vence DATE,
+            @numero_lote NVARCHAR(50),
             @prev INT,
             @nuevo INT;
 
@@ -1508,18 +1588,46 @@ BEGIN
         )
             THROW 51205, N'Área inválida o inactiva', 1;
 
-        SELECT @stock_lote = stock_actual,
-               @vence = fecha_vencimiento
-        FROM dbo.Lotes WITH (UPDLOCK, HOLDLOCK)
-        WHERE id_lote = @id_lote AND id_producto = @id_producto;
+        IF @id_lote IS NULL
+        BEGIN
+            -- FEFO: lote vigente con el vencimiento más próximo que cubra
+            -- la cantidad pedida. Los lotes sin vencimiento quedan al final.
+            SELECT TOP (1)
+                   @id_lote     = l.id_lote,
+                   @stock_lote  = l.stock_actual,
+                   @vence       = l.fecha_vencimiento,
+                   @numero_lote = l.numero_lote
+            FROM dbo.Lotes l WITH (UPDLOCK, HOLDLOCK)
+            WHERE l.id_producto = @id_producto
+              AND l.stock_actual >= @cantidad
+              AND (
+                    l.fecha_vencimiento IS NULL
+                    OR l.fecha_vencimiento > CONVERT(date, GETDATE())
+                  )
+            ORDER BY CASE WHEN l.fecha_vencimiento IS NULL THEN 1 ELSE 0 END,
+                     l.fecha_vencimiento,
+                     l.id_lote;
 
-        IF @stock_lote IS NULL
-            THROW 51206, N'Lote no encontrado', 1;
+            IF @id_lote IS NULL
+                THROW 51209, N'No hay lotes vigentes con stock suficiente para la cantidad solicitada', 1;
+        END
+        ELSE
+        BEGIN
+            SELECT @stock_lote  = stock_actual,
+                   @vence       = fecha_vencimiento,
+                   @numero_lote = numero_lote
+            FROM dbo.Lotes WITH (UPDLOCK, HOLDLOCK)
+            WHERE id_lote = @id_lote AND id_producto = @id_producto;
+
+            IF @stock_lote IS NULL
+                THROW 51206, N'Lote no encontrado', 1;
+        END;
 
         IF @requiere = 1 AND @vence IS NULL
             THROW 51207, N'El lote no tiene fecha de vencimiento', 1;
 
-        IF @vence < CONVERT(date, GETDATE())
+        -- Un lote con vencimiento hoy ya no es despachable.
+        IF @vence <= CONVERT(date, GETDATE())
             THROW 51208, N'El lote está vencido', 1;
 
         IF @stock_lote < @cantidad
@@ -1552,9 +1660,32 @@ BEGIN
 
         DECLARE @id_movimiento INT = CAST(SCOPE_IDENTITY() AS INT);
 
+        -- Auditoría dentro de la misma transacción: si el movimiento se
+        -- confirma, su rastro también; si se revierte, no queda registro.
+        INSERT dbo.Auditoria
+        (
+            id_usuario, accion, modulo, id_registro, id_area, detalle
+        )
+        VALUES
+        (
+            @id_usuario,
+            N'SALIDA',
+            N'movimientos',
+            CAST(@id_movimiento AS NVARCHAR(50)),
+            @id_area,
+            LEFT(CONCAT(
+                N'Producto: ', @id_producto,
+                N', área: ', @id_area,
+                N', lote: ', COALESCE(@numero_lote, N'sin lote'),
+                N', cantidad: ', @cantidad
+            ), 500)
+        );
+
         COMMIT;
 
         SELECT @id_movimiento AS id_movimiento,
+               @id_lote AS id_lote,
+               @numero_lote AS numero_lote,
                @prev AS stock_anterior,
                @nuevo AS stock_posterior;
     END TRY
@@ -1570,10 +1701,28 @@ CREATE OR ALTER PROCEDURE dbo.sp_Movimientos_Listar
     @tipo_movimiento VARCHAR(10) = NULL,
     @id_area         INT = NULL,
     @desde           DATE = NULL,
-    @hasta           DATE = NULL
+    @hasta           DATE = NULL,
+    @busqueda        NVARCHAR(150) = NULL,
+    @pagina          INT = NULL,
+    @tamano          INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT m.id_movimiento,
            m.fecha_movimiento,
@@ -1587,7 +1736,8 @@ BEGIN
            m.cantidad,
            m.motivo,
            m.stock_anterior,
-           m.stock_posterior
+           m.stock_posterior,
+           COUNT(*) OVER () AS total
     FROM dbo.Movimientos m
     JOIN dbo.Productos p ON p.id_producto = m.id_producto
     JOIN dbo.Lotes l ON l.id_lote = m.id_lote
@@ -1599,7 +1749,14 @@ BEGIN
       AND (@desde IS NULL OR m.fecha_movimiento >= @desde)
       AND (@hasta IS NULL
            OR m.fecha_movimiento < DATEADD(day, 1, CAST(@hasta AS DATETIME2)))
-    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC;
+      AND (@busqueda IS NULL
+           OR p.codigo LIKE N'%' + @busqueda + N'%'
+           OR p.nombre LIKE N'%' + @busqueda + N'%'
+           OR l.numero_lote LIKE N'%' + @busqueda + N'%'
+           OR m.motivo LIKE N'%' + @busqueda + N'%'
+           OR u.nombre LIKE N'%' + @busqueda + N'%')
+    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 
@@ -1724,11 +1881,21 @@ CREATE OR ALTER PROCEDURE dbo.sp_Areas_Desactivar
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM dbo.AreasHospitalarias WHERE id_area = @id_area
+    )
+        THROW 51503, N'Área no encontrada', 1;
+
+    -- El área conserva la trazabilidad de sus consumos: no se desactiva
+    -- mientras existan movimientos que la referencien.
+    IF EXISTS (
+        SELECT 1 FROM dbo.Movimientos WHERE id_area = @id_area
+    )
+        THROW 51504, N'El área tiene movimientos registrados y no se puede desactivar', 1;
 
     UPDATE dbo.AreasHospitalarias SET activo = 0 WHERE id_area = @id_area;
-
-    IF @@ROWCOUNT = 0
-        THROW 51503, N'Área no encontrada', 1;
 END;
 GO
 
@@ -1742,7 +1909,10 @@ GO
 
 -- SIGIH | 10 - Alertas y dashboard (solo lectura)
 -- Convención: sp_Alertas_<Accion> / sp_Dashboard_<Accion>
--- sp_Alertas_PorVencer conserva el comportamiento legacy: devuelve PROXIMO y VENCIDO.
+-- Un lote vence al terminar el día anterior: ``fecha_vencimiento <= hoy``
+-- cuenta como VENCIDO y deja de sumar al stock disponible. Por eso
+-- ``sp_Alertas_PorVencer`` con 30 días devuelve 1..30 días como PROXIMO.
+-- Conserva el contrato legacy: devuelve PROXIMO y VENCIDO en un solo set.
 
 USE SIGIH;
 GO
@@ -1763,7 +1933,7 @@ BEGIN
            COALESCE(
                SUM(CASE
                        WHEN l.fecha_vencimiento IS NULL
-                            OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                            OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                        THEN l.stock_actual
                        ELSE 0
                    END), 0
@@ -1775,7 +1945,7 @@ BEGIN
     HAVING COALESCE(
                SUM(CASE
                        WHEN l.fecha_vencimiento IS NULL
-                            OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                            OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                        THEN l.stock_actual
                        ELSE 0
                    END), 0
@@ -1799,7 +1969,7 @@ BEGIN
            l.fecha_vencimiento,
            l.stock_actual,
            CASE
-               WHEN l.fecha_vencimiento < CONVERT(date, GETDATE()) THEN 'VENCIDO'
+               WHEN l.fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 'VENCIDO'
                ELSE 'PROXIMO'
            END AS estado
     FROM dbo.Lotes l
@@ -1832,7 +2002,7 @@ BEGIN
              HAVING COALESCE(
                         SUM(CASE
                                 WHEN l.fecha_vencimiento IS NULL
-                                     OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                                     OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                                 THEN l.stock_actual
                                 ELSE 0
                             END), 0
@@ -1844,15 +2014,15 @@ BEGIN
          JOIN dbo.Productos p ON p.id_producto = l.id_producto
          WHERE p.activo = 1
            AND l.stock_actual > 0
-           AND l.fecha_vencimiento < CONVERT(date, GETDATE())) AS lotes_vencidos,
+           AND l.fecha_vencimiento <= CONVERT(date, GETDATE())) AS lotes_vencidos,
 
         (SELECT COUNT(*)
          FROM dbo.Lotes l
          JOIN dbo.Productos p ON p.id_producto = l.id_producto
          WHERE p.activo = 1
            AND l.stock_actual > 0
-           AND l.fecha_vencimiento BETWEEN CONVERT(date, GETDATE())
-                                        AND DATEADD(day, 30, CONVERT(date, GETDATE()))
+           AND l.fecha_vencimiento > CONVERT(date, GETDATE())
+           AND l.fecha_vencimiento <= DATEADD(day, 30, CONVERT(date, GETDATE()))
         ) AS lotes_proximos_vencer,
 
         (SELECT COALESCE(
@@ -1989,7 +2159,8 @@ CREATE OR ALTER PROCEDURE dbo.sp_Auditoria_Registrar
     @modulo     NVARCHAR(50),
     @id_registro NVARCHAR(50) = NULL,
     @detalle    NVARCHAR(500) = NULL,
-    @ip         NVARCHAR(45) = NULL
+    @ip         NVARCHAR(45) = NULL,
+    @id_area    INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2005,9 +2176,15 @@ BEGIN
            )
             SET @id_usuario = NULL;
 
+        IF @id_area IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1 FROM dbo.AreasHospitalarias WHERE id_area = @id_area
+           )
+            SET @id_area = NULL;
+
         INSERT dbo.Auditoria
         (
-            id_usuario, accion, modulo, id_registro, detalle, ip
+            id_usuario, accion, modulo, id_registro, id_area, detalle, ip
         )
         VALUES
         (
@@ -2015,6 +2192,7 @@ BEGIN
             LEFT(TRIM(@accion), 50),
             LEFT(TRIM(@modulo), 50),
             LEFT(@id_registro, 50),
+            @id_area,
             LEFT(@detalle, 500),
             LEFT(@ip, 45)
         );

@@ -37,12 +37,16 @@ class EntradaCrear(BaseModel):
 
 
 class SalidaCrear(BaseModel):
-    """Datos para dbo.sp_Movimientos_RegistrarSalida; el usuario sale del token."""
+    """Datos para dbo.sp_Movimientos_RegistrarSalida; el usuario sale del token.
+
+    ``id_lote`` es opcional: si llega ``None`` el SP aplica FEFO y elige el
+    lote vigente con vencimiento más próximo que cubra la cantidad.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     id_producto: IdPositivo
-    id_lote: IdPositivo
+    id_lote: IdPositivo | None = None
     id_area: IdPositivo
     cantidad: Cantidad
     motivo: Motivo
@@ -61,6 +65,8 @@ class SalidaRegistrada(BaseModel):
     """Resultado de dbo.sp_Movimientos_RegistrarSalida."""
 
     id_movimiento: int
+    id_lote: int
+    numero_lote: str | None = None
     stock_anterior: int
     stock_posterior: int
 

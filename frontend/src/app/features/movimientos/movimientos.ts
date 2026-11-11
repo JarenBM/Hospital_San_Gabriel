@@ -34,7 +34,6 @@ interface ErroresEntrada {
 
 interface ErroresSalida {
   idProducto: string | null;
-  idLote: string | null;
   idArea: string | null;
   cantidad: string | null;
   motivo: string | null;
@@ -45,7 +44,8 @@ interface ErroresSalida {
  *
  * Los filtros se resuelven en el servidor y el historial se pagina; el
  * formulario de entrada solo pide lote y vencimiento cuando el producto los
- * maneja; el de salida solo ofrece lotes vigentes con stock disponible.
+ * maneja; el de salida ofrece lotes vigentes y, si no se elige uno, el
+ * backend aplica FEFO automáticamente.
  */
 @Component({
   selector: 'app-movimientos',
@@ -216,28 +216,35 @@ export class Movimientos implements OnInit {
     return this.lotesSalida().find((lote) => lote.id_lote === id) ?? null;
   });
 
-  protected readonly stockMaximo = computed(() => this.loteSalida()?.stock_actual ?? 0);
+  protected readonly stockMaximo = computed(() => {
+    const lote = this.loteSalida();
+    if (lote !== null) {
+      return lote.stock_actual;
+    }
+    // FEFO consume un solo lote: el máximo despachable de una vez es la
+    // mayor existencia individual, no la suma de todos los lotes.
+    return this.lotesSalida().reduce((mayor, item) => Math.max(mayor, item.stock_actual), 0);
+  });
 
   protected readonly erroresSalida = computed<ErroresSalida>(() => {
     const producto = this.productoSalida();
-    const lote = this.loteSalida();
     const area = this.areasActivas().find((item) => item.id_area === this.idAreaSalida());
     const cantidadTexto = this.cantidadSalida().trim();
     const cantidad = Number(cantidadTexto);
     const motivo = this.motivoSalida().trim();
+    const maximo = this.stockMaximo();
 
     let errorCantidad: string | null = null;
     if (cantidadTexto === '') {
       errorCantidad = 'Ingrese una cantidad.';
     } else if (!Number.isInteger(cantidad) || cantidad <= 0) {
       errorCantidad = 'La cantidad debe ser un entero mayor que 0.';
-    } else if (lote !== null && cantidad > lote.stock_actual) {
-      errorCantidad = `La cantidad no puede superar el stock disponible (${formatearNumero(lote.stock_actual)}).`;
+    } else if (maximo > 0 && cantidad > maximo) {
+      errorCantidad = `La cantidad no puede superar el stock disponible (${formatearNumero(maximo)}).`;
     }
 
     return {
       idProducto: producto ? null : 'Seleccione un producto.',
-      idLote: lote ? null : 'Seleccione un lote.',
       idArea: area ? null : 'Seleccione un área.',
       cantidad: errorCantidad,
       motivo:
@@ -468,7 +475,7 @@ export class Movimientos implements OnInit {
     const idProducto = this.idProductoSalida();
     const idLote = this.idLoteSalida();
     const idArea = this.idAreaSalida();
-    if (idProducto === null || idLote === null || idArea === null) {
+    if (idProducto === null || idArea === null) {
       this.intentoSalida.set(true);
       return;
     }
@@ -489,7 +496,7 @@ export class Movimientos implements OnInit {
         next: (registrada) => {
           this.toasts.exito(
             'Salida registrada',
-            `Stock del lote: ${formatearNumero(registrada.stock_anterior)} → ${formatearNumero(registrada.stock_posterior)}`,
+            `Lote ${registrada.numero_lote ?? registrada.id_lote}: ${formatearNumero(registrada.stock_anterior)} → ${formatearNumero(registrada.stock_posterior)}`,
           );
           this.guardando.set(false);
           this.cerrarSalidaAhora();

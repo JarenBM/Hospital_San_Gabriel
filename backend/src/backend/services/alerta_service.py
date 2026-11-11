@@ -17,7 +17,11 @@ def listar_stock_bajo() -> list[ProductoStockBajo]:
 
 
 def listar_por_vencer(dias: int = 30) -> list[LoteAlerta]:
-    """Lotes que vencen desde hoy hasta ``dias`` días adelante."""
+    """Lotes que vencen desde mañana hasta ``dias`` días adelante.
+
+    El SP marca como VENCIDO todo lo que vence hoy o antes, así que filtrar
+    por PROXIMO deja exactamente la ventana 1..``dias``.
+    """
     filas = listar_lotes_vencimientos_repositorio(dias)
     return [
         LoteAlerta(**fila) for fila in filas if fila["estado"] == "PROXIMO"
@@ -25,11 +29,11 @@ def listar_por_vencer(dias: int = 30) -> list[LoteAlerta]:
 
 
 def listar_vencidos() -> list[LoteAlerta]:
-    """Lotes ya vencidos que todavía tienen existencias.
+    """Lotes vencidos (fecha <= hoy) que todavía tienen existencias.
 
     Se consulta con ``dias=0`` para no imponer un límite futuro: el SP solo
     filtra por ``fecha_vencimiento <= hoy``, así que incluye vencimientos
-    antiguos sin excepción.
+    antiguos sin excepción y también los que vencen hoy.
     """
     filas = listar_lotes_vencimientos_repositorio(0)
     return [LoteAlerta(**fila) for fila in filas if fila["estado"] == "VENCIDO"]
