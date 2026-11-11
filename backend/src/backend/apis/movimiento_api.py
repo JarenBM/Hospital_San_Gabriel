@@ -3,13 +3,14 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from backend.dependencies import requiere_permiso
 from backend.schemas.auth import UsuarioAutenticado
 from backend.schemas.movimiento import (
     EntradaCrear,
     EntradaRegistrada,
+    MotivoEntrada,
     MovimientoListado,
     SalidaCrear,
     SalidaRegistrada,
@@ -27,16 +28,45 @@ ENTRADA = requiere_permiso("movimientos:entrada")
 SALIDA = requiere_permiso("movimientos:salida")
 
 
+@router.get(
+    "/motivos-entrada",
+    response_model=list[str],
+    dependencies=[LECTURA],
+)
+def motivos_entrada() -> list[str]:
+    """Catálogo cerrado de motivos de entrada admitidos por la API."""
+    return [motivo.value for motivo in MotivoEntrada]
+
+
 @router.get("", response_model=list[MovimientoListado], dependencies=[LECTURA])
 def listar(
+    response: Response,
     id_producto: Annotated[int | None, Query(gt=0)] = None,
     tipo_movimiento: Annotated[Literal["ENTRADA", "SALIDA"] | None, Query()] = None,
     id_area: Annotated[int | None, Query(gt=0)] = None,
     desde: Annotated[date | None, Query()] = None,
     hasta: Annotated[date | None, Query()] = None,
+    busqueda: Annotated[str | None, Query(max_length=150)] = None,
+    pagina: Annotated[int | None, Query(ge=1)] = None,
+    tamano: Annotated[int | None, Query(ge=1, le=100)] = None,
 ) -> list[MovimientoListado]:
-    """Lista movimientos usando dbo.sp_Movimientos_Listar."""
-    return listar_movimientos(id_producto, tipo_movimiento, id_area, desde, hasta)
+    """Lista movimientos usando dbo.sp_Movimientos_Listar.
+
+    Sin ``pagina``/``tamano`` devuelve todos los resultados. Con paginación,
+    ``X-Total-Count`` informa el total de coincidencias de los filtros.
+    """
+    filas, total = listar_movimientos(
+        id_producto,
+        tipo_movimiento,
+        id_area,
+        desde,
+        hasta,
+        busqueda,
+        pagina,
+        tamano,
+    )
+    response.headers["X-Total-Count"] = str(total)
+    return filas
 
 
 @router.post(

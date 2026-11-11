@@ -48,7 +48,6 @@ class Sp:
     PRODUCTOS_CREAR = "dbo.sp_Productos_Crear"
     PRODUCTOS_ACTUALIZAR = "dbo.sp_Productos_Actualizar"
     PRODUCTOS_DESACTIVAR = "dbo.sp_Productos_Desactivar"
-    PRODUCTOS_REACTIVAR = "dbo.sp_Productos_Reactivar"
 
     # Lotes
     LOTES_LISTAR_POR_PRODUCTO = "dbo.sp_Lotes_ListarPorProducto"

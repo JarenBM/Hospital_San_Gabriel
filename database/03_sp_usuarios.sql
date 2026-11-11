@@ -70,10 +70,27 @@ GO
 CREATE OR ALTER PROCEDURE dbo.sp_Usuarios_Listar
     @busqueda     NVARCHAR(150) = NULL,
     @id_rol       INT           = NULL,
-    @solo_activos BIT           = NULL
+    @solo_activos BIT           = NULL,
+    @pagina       INT           = NULL,
+    @tamano       INT           = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT u.id_usuario,
            u.nombre,
@@ -88,7 +105,8 @@ BEGIN
                    JOIN dbo.Roles r ON r.id_rol = ur.id_rol
                    WHERE ur.id_usuario = u.id_usuario
                ) x
-           ) AS roles
+           ) AS roles,
+           COUNT(*) OVER () AS total
     FROM dbo.Usuarios u
     WHERE (@busqueda IS NULL
            OR u.nombre LIKE N'%' + @busqueda + N'%'
@@ -101,7 +119,8 @@ BEGIN
                WHERE ur2.id_usuario = u.id_usuario
                  AND ur2.id_rol = @id_rol
            ))
-    ORDER BY u.nombre;
+    ORDER BY u.nombre
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 

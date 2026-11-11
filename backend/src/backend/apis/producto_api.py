@@ -28,12 +28,23 @@ ESCRITURA = requiere_permiso("productos:escribir")
 
 @router.get("", response_model=list[ProductoListado], dependencies=[LECTURA])
 def listar(
+    response: Response,
     busqueda: Annotated[str | None, Query(max_length=150)] = None,
     id_categoria: Annotated[int | None, Query(gt=0)] = None,
     solo_activos: Annotated[bool | None, Query()] = None,
+    pagina: Annotated[int | None, Query(ge=1)] = None,
+    tamano: Annotated[int | None, Query(ge=1, le=100)] = None,
 ) -> list[ProductoListado]:
-    """Lista productos usando dbo.sp_Productos_Listar."""
-    return listar_productos(busqueda, id_categoria, solo_activos)
+    """Lista productos usando dbo.sp_Productos_Listar.
+
+    Sin ``pagina``/``tamano`` devuelve todos los resultados. Con paginación,
+    ``X-Total-Count`` informa el total de coincidencias de los filtros.
+    """
+    filas, total = listar_productos(
+        busqueda, id_categoria, solo_activos, pagina, tamano
+    )
+    response.headers["X-Total-Count"] = str(total)
+    return filas
 
 
 @router.get("/{id_producto}", response_model=Producto, dependencies=[LECTURA])

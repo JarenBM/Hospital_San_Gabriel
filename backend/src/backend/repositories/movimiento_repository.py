@@ -102,8 +102,11 @@ def listar_movimientos(
     id_area: int | None = None,
     desde: date | None = None,
     hasta: date | None = None,
+    busqueda: str | None = None,
+    pagina: int | None = None,
+    tamano: int | None = None,
 ) -> list[dict]:
-    """Ejecuta dbo.sp_Movimientos_Listar con sus cinco filtros opcionales."""
+    """Ejecuta dbo.sp_Movimientos_Listar con sus filtros y paginación opcionales."""
     return ejecutar_lista(
         Sp.MOVIMIENTOS_LISTAR,
         {
@@ -112,6 +115,9 @@ def listar_movimientos(
             "id_area": id_area,
             "desde": desde,
             "hasta": hasta,
+            "busqueda": busqueda,
+            "pagina": pagina,
+            "tamano": tamano,
         },
     )
 

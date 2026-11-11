@@ -6,7 +6,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { ProductoListado } from '../../models';
+import type { FiltrosProducto, ProductoListado } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmacionService } from '../../core/services/confirmacion.service';
@@ -14,6 +14,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { describirError } from '../../core/utils/errores';
 import { formatearMoneda } from '../../core/utils/formato';
 import { Modal } from '../../shared/components/modal/modal';
+import { Paginador } from '../../shared/components/paginador/paginador';
 
 /** Opciones del filtro por estado del producto. */
 type FiltroEstado = 'todos' | 'activos' | 'inactivos';
@@ -34,13 +35,14 @@ const MAX_ENTERO = 2_147_483_647;
 /**
  * Catálogo de productos.
  *
- * Filtra en cliente sobre la caché de ``ApiService.productos`` y protege las
- * escrituras con el permiso ``productos:escribir``. El formulario usa un
- * signal por campo y validaciones equivalentes a las de Pydantic.
+ * Filtros y paginación se resuelven en el servidor sobre
+ * ``ApiService.productosPagina`` y protege las escrituras con el permiso
+ * ``productos:escribir``. El formulario usa un signal por campo y validaciones
+ * equivalentes a las de Pydantic.
  */
 @Component({
   selector: 'app-productos',
-  imports: [Modal],
+  imports: [Modal, Paginador],
   templateUrl: './productos.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './productos.scss',
@@ -51,7 +53,7 @@ export class Productos implements OnInit {
   private readonly toasts = inject(ToastService);
   private readonly confirmacion = inject(ConfirmacionService);
 
-  protected readonly productos = this.api.productos;
+  protected readonly productos = this.api.productosPagina;
   protected readonly categorias = this.api.categorias;
   protected readonly formatearMoneda = formatearMoneda;
 
@@ -62,6 +64,23 @@ export class Productos implements OnInit {
   protected readonly filtroBusqueda = signal('');
   protected readonly filtroCategoria = signal<number | null>(null);
   protected readonly filtroEstado = signal<FiltroEstado>('todos');
+
+  protected readonly pagina = signal(1);
+  protected readonly tamano = 25;
+
+  protected readonly totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.productos.total() / this.tamano)),
+  );
+
+  protected readonly desdeRegistro = computed(() =>
+    this.productos.datos().length === 0 ? 0 : (this.pagina() - 1) * this.tamano + 1,
+  );
+
+  protected readonly hastaRegistro = computed(
+    () => (this.pagina() - 1) * this.tamano + this.productos.datos().length,
+  );
+
+  private temporizadorBusqueda?: ReturnType<typeof setTimeout>;
 
   protected readonly hayFiltros = computed(
     () =>
@@ -92,30 +111,8 @@ export class Productos implements OnInit {
 
   // ---------- Derivados ----------
 
-  protected readonly productosFiltrados = computed(() => {
-    const busqueda = this.filtroBusqueda().trim().toLowerCase();
-    const idCategoria = this.filtroCategoria();
-    const estado = this.filtroEstado();
-
-    return this.productos.datos().filter((producto) => {
-      if (idCategoria !== null && producto.id_categoria !== idCategoria) {
-        return false;
-      }
-      if (estado === 'activos' && !producto.activo) {
-        return false;
-      }
-      if (estado === 'inactivos' && producto.activo) {
-        return false;
-      }
-      if (busqueda) {
-        const texto = `${producto.nombre} ${producto.codigo}`.toLowerCase();
-        if (!texto.includes(busqueda)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  });
+  /** La página ya viene filtrada y paginada del servidor. */
+  protected readonly productosFiltrados = computed(() => this.productos.datos());
 
   protected readonly cargandoInicial = computed(
     () => this.productos.cargando() && this.productos.datos().length === 0,
@@ -235,7 +232,9 @@ export class Productos implements OnInit {
   // ---------- Carga ----------
 
   protected recargarProductos(): void {
-    this.api.cargarProductos().subscribe({ error: () => undefined });
+    this.api
+      .cargarProductosPagina(this.filtrosServidor())
+      .subscribe({ error: () => undefined });
   }
 
   protected recargarCategorias(): void {
@@ -246,22 +245,33 @@ export class Productos implements OnInit {
 
   protected cambiarFiltroBusqueda(evento: Event): void {
     this.filtroBusqueda.set(this.valorDe(evento));
+    this.reiniciarPaginaConRetraso();
   }
 
   protected cambiarFiltroCategoria(evento: Event): void {
     const valor = this.valorDe(evento);
     this.filtroCategoria.set(valor ? Number(valor) : null);
+    this.reiniciarPaginaYRecargar();
   }
 
   protected cambiarFiltroEstado(evento: Event): void {
     const valor = this.valorDe(evento);
-    this.filtroEstado.set(valor === 'activos' || valor === 'inactivos' ? valor : 'todos');
+    this.filtroEstado.set(
+      valor === 'activos' || valor === 'inactivos' ? valor : 'todos',
+    );
+    this.reiniciarPaginaYRecargar();
   }
 
   protected limpiarFiltros(): void {
     this.filtroBusqueda.set('');
     this.filtroCategoria.set(null);
     this.filtroEstado.set('todos');
+    this.reiniciarPaginaYRecargar();
+  }
+
+  protected irPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.recargarProductos();
   }
 
   // ---------- Modal ----------
@@ -458,6 +468,31 @@ export class Productos implements OnInit {
   }
 
   // ---------- Internos ----------
+
+  private reiniciarPaginaYRecargar(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.pagina.set(1);
+    this.recargarProductos();
+  }
+
+  private reiniciarPaginaConRetraso(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.temporizadorBusqueda = setTimeout(() => {
+      this.pagina.set(1);
+      this.recargarProductos();
+    }, 300);
+  }
+
+  private filtrosServidor(): FiltrosProducto {
+    const estado = this.filtroEstado();
+    return {
+      busqueda: this.filtroBusqueda().trim() || null,
+      id_categoria: this.filtroCategoria(),
+      solo_activos: estado === 'todos' ? null : estado === 'activos',
+      pagina: this.pagina(),
+      tamano: this.tamano,
+    };
+  }
 
   private prepararFormulario(producto: ProductoListado | null): void {
     this.productoEditando.set(producto);

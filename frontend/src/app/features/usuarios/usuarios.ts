@@ -22,6 +22,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { describirError } from '../../core/utils/errores';
 import { formatearFechaHora } from '../../core/utils/formato';
 import { Modal } from '../../shared/components/modal/modal';
+import { Paginador } from '../../shared/components/paginador/paginador';
 
 const PATRON_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -36,7 +37,7 @@ type FiltroEstado = 'todos' | 'activos' | 'inactivos';
  */
 @Component({
   selector: 'app-usuarios',
-  imports: [Modal],
+  imports: [Modal, Paginador],
   templateUrl: './usuarios.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './usuarios.scss',
@@ -57,39 +58,34 @@ export class Usuarios implements OnInit {
 
   protected readonly busqueda = signal('');
   protected readonly filtroEstado = signal<FiltroEstado>('todos');
-  protected readonly filtroRol = signal('');
+  protected readonly filtroRol = signal<number | null>(null);
 
-  protected readonly usuariosFiltrados = computed(() => {
-    const termino = this.busqueda().trim().toLowerCase();
-    const estado = this.filtroEstado();
-    const rol = this.filtroRol();
+  protected readonly pagina = signal(1);
+  protected readonly tamano = 25;
 
-    return this.usuarios.datos().filter((usuario) => {
-      if (termino && !`${usuario.nombre} ${usuario.email}`.toLowerCase().includes(termino)) {
-        return false;
-      }
-      if (estado === 'activos' && !usuario.activo) {
-        return false;
-      }
-      if (estado === 'inactivos' && usuario.activo) {
-        return false;
-      }
-      if (rol && !this.rolesDe(usuario).includes(rol)) {
-        return false;
-      }
-      return true;
-    });
-  });
+  protected readonly totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.usuarios.total() / this.tamano)),
+  );
 
-  protected readonly rolesFiltro = computed<string[]>(() => {
-    const nombres = new Set<string>();
-    for (const usuario of this.usuarios.datos()) {
-      for (const rol of this.rolesDe(usuario)) {
-        nombres.add(rol);
-      }
-    }
-    return [...nombres].sort((a, b) => a.localeCompare(b, 'es'));
-  });
+  protected readonly desdeRegistro = computed(() =>
+    this.usuarios.datos().length === 0 ? 0 : (this.pagina() - 1) * this.tamano + 1,
+  );
+
+  protected readonly hastaRegistro = computed(
+    () => (this.pagina() - 1) * this.tamano + this.usuarios.datos().length,
+  );
+
+  protected readonly hayFiltros = computed(
+    () =>
+      this.busqueda().trim() !== '' ||
+      this.filtroEstado() !== 'todos' ||
+      this.filtroRol() !== null,
+  );
+
+  private temporizadorBusqueda?: ReturnType<typeof setTimeout>;
+
+  /** La página ya viene filtrada y paginada del servidor. */
+  protected readonly usuariosFiltrados = computed(() => this.usuarios.datos());
 
   // ---------- Modal de alta ----------
 
@@ -233,9 +229,7 @@ export class Usuarios implements OnInit {
   );
 
   ngOnInit(): void {
-    this.api.cargarUsuarios().subscribe({
-      error: (error: unknown) => this.notificarError(error),
-    });
+    this.recargarUsuarios();
     this.api.cargarRoles(true).subscribe({ error: () => undefined });
   }
 
@@ -253,17 +247,35 @@ export class Usuarios implements OnInit {
     return !!usuario && actual !== null && actual.id_usuario === usuario.id_usuario;
   }
 
+  protected cambiarBusqueda(valor: string): void {
+    this.busqueda.set(valor);
+    this.reiniciarPaginaConRetraso();
+  }
+
   protected cambiarEstado(evento: Event): void {
     const valor = (evento.target as HTMLSelectElement).value;
     if (valor === 'todos' || valor === 'activos' || valor === 'inactivos') {
       this.filtroEstado.set(valor);
+      this.reiniciarPaginaYRecargar();
     }
+  }
+
+  protected cambiarRolFiltro(evento: Event): void {
+    const valor = Number((evento.target as HTMLSelectElement).value);
+    this.filtroRol.set(Number.isFinite(valor) && valor > 0 ? valor : null);
+    this.reiniciarPaginaYRecargar();
   }
 
   protected limpiarFiltros(): void {
     this.busqueda.set('');
     this.filtroEstado.set('todos');
-    this.filtroRol.set('');
+    this.filtroRol.set(null);
+    this.reiniciarPaginaYRecargar();
+  }
+
+  protected irPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.recargarUsuarios();
   }
 
   protected cambiarRolSeleccionado(evento: Event): void {
@@ -305,7 +317,7 @@ export class Usuarios implements OnInit {
       await firstValueFrom(this.api.crearUsuario(datos));
       this.toasts.exito('Usuario creado', `${datos.nombre} ya puede iniciar sesión.`);
       this.modalAlta.set(false);
-      this.api.cargarUsuarios().subscribe({ error: () => undefined });
+      this.recargarUsuarios();
     } catch (error: unknown) {
       this.notificarError(error);
     } finally {
@@ -347,7 +359,7 @@ export class Usuarios implements OnInit {
       await firstValueFrom(this.api.actualizarUsuario(usuario.id_usuario, datos));
       this.toasts.exito('Usuario actualizado', datos.nombre);
       this.modalEdicion.set(false);
-      this.api.cargarUsuarios().subscribe({ error: () => undefined });
+      this.recargarUsuarios();
     } catch (error: unknown) {
       this.notificarError(error);
     } finally {
@@ -385,7 +397,7 @@ export class Usuarios implements OnInit {
       this.toasts.exito('Rol asignado', rol?.nombre ?? 'El rol se asignó correctamente.');
       this.idRolSeleccionado.set(null);
       await this.cargarRolesDelUsuario(usuario.id_usuario);
-      this.api.cargarUsuarios().subscribe({ error: () => undefined });
+      this.recargarUsuarios();
     } catch (error: unknown) {
       this.notificarError(error);
     } finally {
@@ -405,7 +417,7 @@ export class Usuarios implements OnInit {
       await firstValueFrom(this.api.quitarRolUsuario(usuario.id_usuario, rol.id_rol));
       this.toasts.exito('Rol retirado', rol.nombre);
       await this.cargarRolesDelUsuario(usuario.id_usuario);
-      this.api.cargarUsuarios().subscribe({ error: () => undefined });
+      this.recargarUsuarios();
     } catch (error: unknown) {
       this.notificarError(error);
     } finally {
@@ -490,10 +502,37 @@ export class Usuarios implements OnInit {
     try {
       await firstValueFrom(this.api.desactivarUsuario(usuario.id_usuario));
       this.toasts.exito('Usuario desactivado', usuario.nombre);
-      this.api.cargarUsuarios().subscribe({ error: () => undefined });
+      this.recargarUsuarios();
     } catch (error: unknown) {
       this.notificarError(error);
     }
+  }
+
+  private recargarUsuarios(): void {
+    const estado = this.filtroEstado();
+    this.api
+      .cargarUsuarios({
+        busqueda: this.busqueda().trim() || null,
+        id_rol: this.filtroRol(),
+        solo_activos: estado === 'todos' ? null : estado === 'activos',
+        pagina: this.pagina(),
+        tamano: this.tamano,
+      })
+      .subscribe({ error: (error: unknown) => this.notificarError(error) });
+  }
+
+  private reiniciarPaginaYRecargar(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.pagina.set(1);
+    this.recargarUsuarios();
+  }
+
+  private reiniciarPaginaConRetraso(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.temporizadorBusqueda = setTimeout(() => {
+      this.pagina.set(1);
+      this.recargarUsuarios();
+    }, 300);
   }
 
   private notificarError(error: unknown): void {

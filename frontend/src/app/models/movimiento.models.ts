@@ -1,4 +1,4 @@
-import type { FechaHoraISO, FechaISO, Id } from './api.models';
+import type { FechaHoraISO, FechaISO, Id, Paginacion } from './api.models';
 
 /** Contratos de entradas, salidas y movimientos (``/api/movimientos``). */
 
@@ -65,10 +65,11 @@ export interface MovimientoListado {
 }
 
 /** Filtros de ``GET /api/movimientos``. */
-export interface FiltrosMovimiento {
+export interface FiltrosMovimiento extends Paginacion {
   id_producto?: Id | null;
   tipo_movimiento?: TipoMovimiento | null;
   id_area?: Id | null;
   desde?: FechaISO | null;
   hasta?: FechaISO | null;
+  busqueda?: string | null;
 }

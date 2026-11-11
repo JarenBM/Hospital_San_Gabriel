@@ -62,14 +62,18 @@ def listar_usuarios(
     busqueda: str | None = None,
     id_rol: int | None = None,
     solo_activos: bool | None = None,
+    pagina: int | None = None,
+    tamano: int | None = None,
 ) -> list[dict]:
-    """Ejecuta dbo.sp_Usuarios_Listar."""
+    """Ejecuta dbo.sp_Usuarios_Listar con sus filtros y paginación opcionales."""
     return ejecutar_lista(
         Sp.USUARIOS_LISTAR,
         {
             "busqueda": busqueda,
             "id_rol": id_rol,
             "solo_activos": solo_activos,
+            "pagina": pagina,
+            "tamano": tamano,
         },
     )
 

@@ -7,7 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { finalize } from 'rxjs';
-import type { Lote, MotivoEntrada, TipoMovimiento } from '../../models';
+import type { FiltrosMovimiento, Lote, MotivoEntrada, TipoMovimiento } from '../../models';
 import { MOTIVOS_ENTRADA } from '../../models';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,6 +20,7 @@ import {
   formatearNumero,
 } from '../../core/utils/formato';
 import { Modal } from '../../shared/components/modal/modal';
+import { Paginador } from '../../shared/components/paginador/paginador';
 
 type FiltroTipo = 'TODOS' | TipoMovimiento;
 
@@ -42,13 +43,13 @@ interface ErroresSalida {
 /**
  * Historial de movimientos y registro de entradas y salidas.
  *
- * Los filtros se aplican localmente sobre la lista que entrega la API. El
+ * Los filtros se resuelven en el servidor y el historial se pagina; el
  * formulario de entrada solo pide lote y vencimiento cuando el producto los
  * maneja; el de salida solo ofrece lotes vigentes con stock disponible.
  */
 @Component({
   selector: 'app-movimientos',
-  imports: [Modal],
+  imports: [Modal, Paginador],
   templateUrl: './movimientos.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './movimientos.scss',
@@ -72,7 +73,8 @@ export class Movimientos implements OnInit {
   protected readonly formatearFecha = formatearFecha;
   protected readonly formatearFechaHora = formatearFechaHora;
   protected readonly formatearNumero = formatearNumero;
-  protected readonly motivosEntrada = MOTIVOS_ENTRADA;
+  /** Catálogo del backend; la constante local queda como respaldo offline. */
+  protected readonly motivosEntrada = signal<readonly MotivoEntrada[]>(MOTIVOS_ENTRADA);
   protected readonly tiposFiltro: readonly FiltroTipo[] = ['TODOS', 'ENTRADA', 'SALIDA'];
   protected readonly hoy = fechaHoyISO();
 
@@ -84,67 +86,42 @@ export class Movimientos implements OnInit {
   protected readonly desde = signal('');
   protected readonly hasta = signal('');
 
+  protected readonly pagina = signal(1);
+  protected readonly tamano = 25;
+
+  protected readonly totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.movimientos.total() / this.tamano)),
+  );
+
+  protected readonly desdeRegistro = computed(() =>
+    this.movimientos.datos().length === 0
+      ? 0
+      : (this.pagina() - 1) * this.tamano + 1,
+  );
+
+  protected readonly hastaRegistro = computed(
+    () => (this.pagina() - 1) * this.tamano + this.movimientos.datos().length,
+  );
+
+  protected readonly hayFiltros = computed(
+    () =>
+      this.busqueda().trim() !== '' ||
+      this.tipoFiltro() !== 'TODOS' ||
+      this.idAreaFiltro() !== null ||
+      this.desde() !== '' ||
+      this.hasta() !== '',
+  );
+
+  private temporizadorBusqueda?: ReturnType<typeof setTimeout>;
+
   protected readonly rangoInvalido = computed(
     () => this.desde() !== '' && this.hasta() !== '' && this.desde() > this.hasta(),
   );
 
-  protected readonly areaFiltro = computed(() => {
-    const id = this.idAreaFiltro();
-    if (id === null) {
-      return null;
-    }
-    return this.areas().find((area) => area.id_area === id) ?? null;
-  });
+  protected readonly totalMovimientos = computed(() => this.movimientos.total());
 
-  protected readonly totalMovimientos = computed(() => this.movimientos.datos().length);
-
-  protected readonly movimientosFiltrados = computed(() => {
-    const termino = this.busqueda().trim().toLowerCase();
-    const tipo = this.tipoFiltro();
-    const area = this.areaFiltro();
-    const desde = this.desde();
-    const hasta = this.hasta();
-    const rangoValido = !this.rangoInvalido();
-
-    return this.movimientos.datos().filter((movimiento) => {
-      if (tipo !== 'TODOS' && movimiento.tipo_movimiento !== tipo) {
-        return false;
-      }
-
-      if (area !== null && movimiento.area !== area.nombre) {
-        return false;
-      }
-
-      // Un rango inválido no se aplica: se avisa al usuario y se dejan ver
-      // los movimientos que cumplen el resto de los filtros.
-      if (rangoValido) {
-        const fecha = movimiento.fecha_movimiento.slice(0, 10);
-        if (desde !== '' && fecha < desde) {
-          return false;
-        }
-        if (hasta !== '' && fecha > hasta) {
-          return false;
-        }
-      }
-
-      if (termino !== '') {
-        const texto = [
-          movimiento.producto,
-          movimiento.codigo,
-          movimiento.numero_lote ?? '',
-          movimiento.motivo,
-          movimiento.usuario,
-        ]
-          .join(' ')
-          .toLowerCase();
-        if (!texto.includes(termino)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  });
+  /** La página ya viene filtrada y paginada del servidor. */
+  protected readonly movimientosFiltrados = computed(() => this.movimientos.datos());
 
   // ---------- Modales ----------
 
@@ -285,38 +262,49 @@ export class Movimientos implements OnInit {
     this.recargarHistorial();
     this.cargarProductos();
     this.cargarAreas();
+    this.cargarMotivosEntrada();
   }
 
   // ---------- Filtros ----------
 
   protected actualizarBusqueda(evento: Event): void {
     this.busqueda.set((evento.target as HTMLInputElement).value);
+    this.reiniciarPaginaConRetraso();
   }
 
   protected actualizarTipoFiltro(evento: Event): void {
     const valor = (evento.target as HTMLSelectElement).value;
     if (valor === 'TODOS' || valor === 'ENTRADA' || valor === 'SALIDA') {
       this.tipoFiltro.set(valor);
+      this.reiniciarPaginaYRecargar();
     }
   }
 
   protected actualizarAreaFiltro(evento: Event): void {
     this.idAreaFiltro.set(this.leerId(evento));
+    this.reiniciarPaginaYRecargar();
   }
 
   protected actualizarDesde(evento: Event): void {
     this.desde.set((evento.target as HTMLInputElement).value);
+    this.reiniciarPaginaYRecargar();
   }
 
   protected actualizarHasta(evento: Event): void {
     this.hasta.set((evento.target as HTMLInputElement).value);
+    this.reiniciarPaginaYRecargar();
+  }
+
+  protected irPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.recargarHistorial();
   }
 
   protected recargarHistorial(): void {
     if (!this.puedeLeer()) {
       return;
     }
-    this.api.cargarMovimientos().subscribe({
+    this.api.cargarMovimientos(this.filtrosServidor()).subscribe({
       error: (error: unknown) => {
         const { mensaje, detalle } = describirError(error);
         this.toasts.error(mensaje, detalle);
@@ -591,6 +579,45 @@ export class Movimientos implements OnInit {
       });
   }
 
+  private cargarMotivosEntrada(): void {
+    this.api.cargarMotivosEntrada().subscribe({
+      next: (motivos) => {
+        if (motivos.length > 0) {
+          this.motivosEntrada.set(motivos as MotivoEntrada[]);
+        }
+      },
+      error: () => undefined,
+    });
+  }
+
+  private reiniciarPaginaYRecargar(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.pagina.set(1);
+    this.recargarHistorial();
+  }
+
+  private reiniciarPaginaConRetraso(): void {
+    clearTimeout(this.temporizadorBusqueda);
+    this.temporizadorBusqueda = setTimeout(() => {
+      this.pagina.set(1);
+      this.recargarHistorial();
+    }, 300);
+  }
+
+  private filtrosServidor(): FiltrosMovimiento {
+    const rangoValido = !this.rangoInvalido();
+    const tipo = this.tipoFiltro();
+    return {
+      busqueda: this.busqueda().trim() || null,
+      tipo_movimiento: tipo === 'TODOS' ? null : tipo,
+      id_area: this.idAreaFiltro(),
+      desde: rangoValido && this.desde() !== '' ? this.desde() : null,
+      hasta: rangoValido && this.hasta() !== '' ? this.hasta() : null,
+      pagina: this.pagina(),
+      tamano: this.tamano,
+    };
+  }
+
   private cargarProductos(): void {
     this.api.cargarProductos().subscribe({
       error: (error: unknown) => {
@@ -610,7 +637,7 @@ export class Movimientos implements OnInit {
   }
 
   private esMotivoEntrada(valor: string): valor is MotivoEntrada {
-    return MOTIVOS_ENTRADA.some((motivo) => motivo === valor);
+    return this.motivosEntrada().some((motivo) => motivo === valor);
   }
 
   private leerId(evento: Event): number | null {

@@ -56,12 +56,12 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\09_sp_areas.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\10_sp_alertas_dashboard.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\11_sp_reportes.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\12_sp_auditoria.sql
-sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\13_wrappers_legacy.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\14_seed_catalogos.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\15_seed_rbac.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\16_admin_inicial.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="UnaClaveFuerte.2026!"
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\18_seed_demo.sql
+sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\19_eliminar_wrappers_legacy.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 ```
 
@@ -119,12 +119,13 @@ sp_...`. El acceso directo a tablas queda bloqueado.
 | `10` | Alertas y dashboard |
 | `11` | Reportes |
 | `12` | Auditoría (registro) |
-| `13` | Wrappers con nombres legacy |
+| `13` | *Retirado*: los wrappers legacy se eliminan en `19` |
 | `14` | Catálogos iniciales |
 | `15` | Roles, permisos y asignaciones |
 | `16` | Administrador inicial |
 | `17` | Usuario `sigih_app` y permisos |
 | `18` | Datos de demostración (catálogos, productos, lotes y movimientos) |
+| `19` | Elimina wrappers legacy y `sp_Productos_Reactivar` |
 | `99` | Verificación |
 
 ## Reglas de negocio relevantes
@@ -143,9 +144,15 @@ sp_...`. El acceso directo a tablas queda bloqueado.
 
 ## Notas
 
-- `13_wrappers_legacy.sql` mantiene los nombres antiguos (20 wrappers;
-  `sp_Dashboard_Resumen` ya era canónico). Se puede retirar cuando ya no
-  queden clientes con esos nombres.
+- `19_eliminar_wrappers_legacy.sql` retira los 20 nombres antiguos
+  (`sp_Usuario_*`, `sp_Categoria_*`, `sp_Producto_*`, `sp_Lote_*`,
+  `sp_Entrada_*`, `sp_Salida_*`, `sp_Movimiento_*`, `sp_Area_Listar`) y
+  `sp_Productos_Reactivar`. El backend solo usa los SP canónicos en plural
+  (`sp_Usuarios_*`, `sp_Categorias_*`, `sp_Productos_*`, ...), así que la
+  eliminación es segura e idempotente.
 - `sp_Alertas_PorVencer` devuelve tanto `PROXIMO` como `VENCIDO` para conservar
   la compatibilidad con `sp_Lote_Vencimientos`; el backend filtra por estado.
-- La paginación se difiere a la Fase 3 del frontend.
+- Los listados de productos, usuarios y movimientos aceptan `pagina` y
+  `tamano` (máximo 100). Sin ellos devuelven todos los resultados. Con
+  paginación, la respuesta incluye `X-Total-Count` con el total de
+  coincidencias de los filtros.

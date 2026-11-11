@@ -24,7 +24,7 @@ IdCategoria = Annotated[int, Field(gt=0)]
 
 
 class Producto(BaseModel):
-    """Fila devuelta por dbo.sp_Producto_Obtener."""
+    """Fila devuelta por dbo.sp_Productos_Obtener."""
 
     id_producto: int
     id_categoria: int
@@ -40,7 +40,7 @@ class Producto(BaseModel):
 
 
 class ProductoListado(Producto):
-    """Fila devuelta por dbo.sp_Producto_Listar.
+    """Fila devuelta por dbo.sp_Productos_Listar.
 
     Añade el nombre de la categoría y el stock calculado a partir de los lotes.
     """
@@ -51,7 +51,7 @@ class ProductoListado(Producto):
 
 
 class ProductoCrear(BaseModel):
-    """Datos para dbo.sp_Producto_Crear.
+    """Datos para dbo.sp_Productos_Crear.
 
     ``maneja_lotes`` y ``requiere_vencimiento`` solo se definen al crear.
     """
@@ -75,7 +75,7 @@ class ProductoCrear(BaseModel):
 
 
 class ProductoActualizar(BaseModel):
-    """Datos para dbo.sp_Producto_Actualizar.
+    """Datos para dbo.sp_Productos_Actualizar.
 
     No incluye ``maneja_lotes`` ni ``requiere_vencimiento``: el SP no los
     actualiza y aceptarlos aquí los ignoraría en silencio. Tampoco incluye

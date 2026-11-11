@@ -89,6 +89,17 @@ def ejecutar_multiples(
         return resultados
 
 
+def total_de(filas: list[dict]) -> int:
+    """Total de coincidencias de un listado, leído de la columna ``total``.
+
+    Los SP de listado añaden ``COUNT(*) OVER () AS total``. Si no hay filas
+    (página fuera de rango) se devuelve 0; el cliente evita llegar a ese caso.
+    """
+    if not filas:
+        return 0
+    return int(filas[0].get("total") or len(filas))
+
+
 def ejecutar_accion(
     nombre: str, parametros: Mapping[str, Any] | None = None
 ) -> None:

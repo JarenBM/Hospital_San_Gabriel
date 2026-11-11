@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 
 class ProductoStockBajo(BaseModel):
-    """Fila devuelta por dbo.sp_Producto_StockBajo."""
+    """Fila devuelta por dbo.sp_Alertas_StockBajo."""
 
     id_producto: int
     codigo: str
@@ -18,7 +18,7 @@ class ProductoStockBajo(BaseModel):
 
 
 class LoteAlerta(BaseModel):
-    """Fila devuelta por dbo.sp_Lote_Vencimientos.
+    """Fila devuelta por dbo.sp_Alertas_PorVencer.
 
     ``estado`` lo calcula SQL Server: VENCIDO si la fecha es anterior a hoy,
     PROXIMO si cae entre hoy y el límite consultado.

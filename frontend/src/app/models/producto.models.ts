@@ -1,4 +1,4 @@
-import type { DecimalString, Id } from './api.models';
+import type { DecimalString, Id, Paginacion } from './api.models';
 
 /** Contratos de productos (``/api/productos``). */
 
@@ -63,7 +63,7 @@ export interface ProductoActualizar {
 }
 
 /** Filtros de ``GET /api/productos``. */
-export interface FiltrosProducto {
+export interface FiltrosProducto extends Paginacion {
   busqueda?: string | null;
   id_categoria?: Id | null;
   solo_activos?: boolean | null;

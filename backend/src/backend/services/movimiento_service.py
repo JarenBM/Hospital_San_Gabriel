@@ -3,6 +3,7 @@
 from datetime import date
 
 from backend.repositories import auditoria_repository
+from backend.repositories.base import total_de
 from backend.repositories.movimiento_repository import (
     listar_movimientos as listar_movimientos_repositorio,
     registrar_entrada as registrar_entrada_repositorio,
@@ -23,12 +24,15 @@ def listar_movimientos(
     id_area: int | None = None,
     desde: date | None = None,
     hasta: date | None = None,
-) -> list[MovimientoListado]:
-    """Devuelve los movimientos registrados, con sus filtros opcionales."""
+    busqueda: str | None = None,
+    pagina: int | None = None,
+    tamano: int | None = None,
+) -> tuple[list[MovimientoListado], int]:
+    """Devuelve los movimientos filtrados y el total de coincidencias."""
     filas = listar_movimientos_repositorio(
-        id_producto, tipo_movimiento, id_area, desde, hasta
+        id_producto, tipo_movimiento, id_area, desde, hasta, busqueda, pagina, tamano
     )
-    return [MovimientoListado(**fila) for fila in filas]
+    return [MovimientoListado(**fila) for fila in filas], total_de(filas)
 
 
 def registrar_entrada(datos: EntradaCrear, id_usuario: int) -> EntradaRegistrada:

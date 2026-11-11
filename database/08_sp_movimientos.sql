@@ -238,10 +238,28 @@ CREATE OR ALTER PROCEDURE dbo.sp_Movimientos_Listar
     @tipo_movimiento VARCHAR(10) = NULL,
     @id_area         INT = NULL,
     @desde           DATE = NULL,
-    @hasta           DATE = NULL
+    @hasta           DATE = NULL,
+    @busqueda        NVARCHAR(150) = NULL,
+    @pagina          INT = NULL,
+    @tamano          INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT m.id_movimiento,
            m.fecha_movimiento,
@@ -255,7 +273,8 @@ BEGIN
            m.cantidad,
            m.motivo,
            m.stock_anterior,
-           m.stock_posterior
+           m.stock_posterior,
+           COUNT(*) OVER () AS total
     FROM dbo.Movimientos m
     JOIN dbo.Productos p ON p.id_producto = m.id_producto
     JOIN dbo.Lotes l ON l.id_lote = m.id_lote
@@ -267,7 +286,14 @@ BEGIN
       AND (@desde IS NULL OR m.fecha_movimiento >= @desde)
       AND (@hasta IS NULL
            OR m.fecha_movimiento < DATEADD(day, 1, CAST(@hasta AS DATETIME2)))
-    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC;
+      AND (@busqueda IS NULL
+           OR p.codigo LIKE N'%' + @busqueda + N'%'
+           OR p.nombre LIKE N'%' + @busqueda + N'%'
+           OR l.numero_lote LIKE N'%' + @busqueda + N'%'
+           OR m.motivo LIKE N'%' + @busqueda + N'%'
+           OR u.nombre LIKE N'%' + @busqueda + N'%')
+    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 

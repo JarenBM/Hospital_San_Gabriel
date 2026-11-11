@@ -12,10 +12,27 @@ GO
 CREATE OR ALTER PROCEDURE dbo.sp_Productos_Listar
     @busqueda     NVARCHAR(150) = NULL,
     @id_categoria INT           = NULL,
-    @solo_activos BIT           = NULL
+    @solo_activos BIT           = NULL,
+    @pagina       INT           = NULL,
+    @tamano       INT           = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT p.id_producto,
            p.codigo,
@@ -30,7 +47,8 @@ BEGIN
            p.requiere_vencimiento,
            p.activo,
            COALESCE(s.stock_total, 0)      AS stock_total,
-           COALESCE(s.stock_disponible, 0) AS stock_disponible
+           COALESCE(s.stock_disponible, 0) AS stock_disponible,
+           COUNT(*) OVER ()                AS total
     FROM dbo.Productos p
     JOIN dbo.Categorias c ON c.id_categoria = p.id_categoria
     OUTER APPLY (
@@ -49,7 +67,8 @@ BEGIN
            OR p.nombre LIKE N'%' + @busqueda + N'%')
       AND (@id_categoria IS NULL OR p.id_categoria = @id_categoria)
       AND (@solo_activos IS NULL OR p.activo = @solo_activos)
-    ORDER BY p.nombre;
+    ORDER BY p.nombre
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 
@@ -193,19 +212,6 @@ BEGIN
         THROW 51009, N'No se puede desactivar un producto con existencias', 1;
 
     UPDATE dbo.Productos SET activo = 0 WHERE id_producto = @id_producto;
-END;
-GO
-
-CREATE OR ALTER PROCEDURE dbo.sp_Productos_Reactivar
-    @id_producto INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    UPDATE dbo.Productos SET activo = 1 WHERE id_producto = @id_producto;
-
-    IF @@ROWCOUNT = 0
-        THROW 51007, N'Producto no encontrado', 1;
 END;
 GO
 

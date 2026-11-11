@@ -162,7 +162,7 @@
             </button>
           </div>
         </div>
-      } @else if (totalMovimientos() === 0) {
+      } @else if (totalMovimientos() === 0 && !hayFiltros()) {
         <div class="sigih-vacio">
           <i class="bi bi-arrow-left-right"></i>
           <strong>Sin movimientos registrados</strong>
@@ -240,6 +240,16 @@
             </tbody>
           </table>
         </div>
+
+        <app-paginador
+          [pagina]="pagina()"
+          [totalPaginas]="totalPaginas()"
+          [total]="totalMovimientos()"
+          [desde]="desdeRegistro()"
+          [hasta]="hastaRegistro()"
+          [deshabilitado]="movimientos.cargando()"
+          (cambiar)="irPagina($event)"
+        />
       }
     </article>
   }
@@ -334,7 +344,7 @@
             (change)="actualizarMotivoEntrada($event)"
           >
             <option value="">Seleccione un motivo…</option>
-            @for (motivo of motivosEntrada; track motivo) {
+            @for (motivo of motivosEntrada(); track motivo) {
               <option [value]="motivo">{{ motivo }}</option>
             }
           </select>

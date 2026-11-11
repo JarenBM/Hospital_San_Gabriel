@@ -41,14 +41,18 @@ def listar_productos(
     busqueda: str | None = None,
     id_categoria: int | None = None,
     solo_activos: bool | None = None,
+    pagina: int | None = None,
+    tamano: int | None = None,
 ) -> list[dict]:
-    """Ejecuta dbo.sp_Productos_Listar con sus tres filtros opcionales."""
+    """Ejecuta dbo.sp_Productos_Listar con sus filtros y paginación opcionales."""
     return ejecutar_lista(
         Sp.PRODUCTOS_LISTAR,
         {
             "busqueda": busqueda,
             "id_categoria": id_categoria,
             "solo_activos": solo_activos,
+            "pagina": pagina,
+            "tamano": tamano,
         },
     )
 

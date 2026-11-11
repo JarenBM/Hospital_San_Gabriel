@@ -555,12 +555,12 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\09_sp_areas.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\10_sp_alertas_dashboard.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\11_sp_reportes.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\12_sp_auditoria.sql
-sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\13_wrappers_legacy.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\14_seed_catalogos.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\15_seed_rbac.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\16_admin_inicial.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\17_permisos_app.sql -v APP_PASSWORD="Sigih.App.2026!"
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\18_seed_demo.sql
+sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\19_eliminar_wrappers_legacy.sql
 sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 ```
 
@@ -579,12 +579,12 @@ sqlcmd -S .\SQLEXPRESS -E -C -b -f 65001 -i database\99_verificar.sql
 | 11 | `10_sp_alertas_dashboard.sql` | Alertas y resumen del dashboard |
 | 12 | `11_sp_reportes.sql` | Kardex, mayores salidas y stock valorizado |
 | 13 | `12_sp_auditoria.sql` | Registro de auditoría |
-| 14 | `13_wrappers_legacy.sql` | Wrappers con nombres antiguos |
-| 15 | `14_seed_catalogos.sql` | Catálogos iniciales |
-| 16 | `15_seed_rbac.sql` | Roles y permisos |
-| 17 | `16_admin_inicial.sql` | Administrador inicial |
-| 18 | `17_permisos_app.sql` | Login/usuario `sigih_app` |
-| 19 | `18_seed_demo.sql` | Datos de demostración: catálogos, productos y movimientos |
+| 14 | `14_seed_catalogos.sql` | Catálogos iniciales |
+| 15 | `15_seed_rbac.sql` | Roles y permisos |
+| 16 | `16_admin_inicial.sql` | Administrador inicial |
+| 17 | `17_permisos_app.sql` | Login/usuario `sigih_app` |
+| 18 | `18_seed_demo.sql` | Datos de demostración: catálogos, productos y movimientos |
+| 19 | `19_eliminar_wrappers_legacy.sql` | Elimina wrappers legacy y `sp_Productos_Reactivar` |
 | 20 | `99_verificar.sql` | Solo lectura: comprueba la instalación |
 
 Todos son **idempotentes**: se pueden repetir sin duplicar datos.

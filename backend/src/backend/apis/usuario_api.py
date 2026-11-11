@@ -34,13 +34,24 @@ GESTION = requiere_permiso("usuarios:gestionar")
 
 @router.get("", response_model=list[Usuario])
 def listar(
+    response: Response,
     actor: Annotated[UsuarioAutenticado, Depends(GESTION)],
     busqueda: Annotated[str | None, Query(max_length=150)] = None,
     id_rol: Annotated[int | None, Query(gt=0)] = None,
     solo_activos: Annotated[bool | None, Query()] = None,
+    pagina: Annotated[int | None, Query(ge=1)] = None,
+    tamano: Annotated[int | None, Query(ge=1, le=100)] = None,
 ) -> list[Usuario]:
-    """Lista usuarios usando dbo.sp_Usuarios_Listar."""
-    return listar_usuarios(busqueda, id_rol, solo_activos)
+    """Lista usuarios usando dbo.sp_Usuarios_Listar.
+
+    Sin ``pagina``/``tamano`` devuelve todos los resultados. Con paginación,
+    ``X-Total-Count`` informa el total de coincidencias de los filtros.
+    """
+    filas, total = listar_usuarios(
+        busqueda, id_rol, solo_activos, pagina, tamano
+    )
+    response.headers["X-Total-Count"] = str(total)
+    return filas
 
 
 @router.get("/{id_usuario}", response_model=Usuario)

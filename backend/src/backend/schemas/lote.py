@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class Lote(BaseModel):
-    """Fila devuelta por dbo.sp_Lote_ListarPorProducto.
+    """Fila devuelta por dbo.sp_Lotes_ListarPorProducto.
 
     El stock solo cambia mediante entradas y salidas, nunca por un CRUD.
     """

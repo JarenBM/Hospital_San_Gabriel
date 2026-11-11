@@ -21,7 +21,7 @@ class MotivoEntrada(str, Enum):
 
 
 class EntradaCrear(BaseModel):
-    """Datos para dbo.sp_Entrada_Registrar.
+    """Datos para dbo.sp_Movimientos_RegistrarEntrada.
 
     El usuario no viaja en el cuerpo: sale del token autenticado. Enviar
     ``id_usuario`` responde 422 para delatar clientes antiguos.
@@ -37,7 +37,7 @@ class EntradaCrear(BaseModel):
 
 
 class SalidaCrear(BaseModel):
-    """Datos para dbo.sp_Salida_Registrar; el usuario sale del token."""
+    """Datos para dbo.sp_Movimientos_RegistrarSalida; el usuario sale del token."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -49,7 +49,7 @@ class SalidaCrear(BaseModel):
 
 
 class EntradaRegistrada(BaseModel):
-    """Resultado de dbo.sp_Entrada_Registrar."""
+    """Resultado de dbo.sp_Movimientos_RegistrarEntrada."""
 
     id_movimiento: int
     id_lote: int
@@ -58,7 +58,7 @@ class EntradaRegistrada(BaseModel):
 
 
 class SalidaRegistrada(BaseModel):
-    """Resultado de dbo.sp_Salida_Registrar."""
+    """Resultado de dbo.sp_Movimientos_RegistrarSalida."""
 
     id_movimiento: int
     stock_anterior: int
@@ -66,7 +66,7 @@ class SalidaRegistrada(BaseModel):
 
 
 class MovimientoListado(BaseModel):
-    """Fila devuelta por dbo.sp_Movimiento_Listar."""
+    """Fila devuelta por dbo.sp_Movimientos_Listar."""
 
     id_movimiento: int
     fecha_movimiento: datetime

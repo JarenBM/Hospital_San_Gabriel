@@ -106,7 +106,7 @@
     <div class="card-body">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
         <span class="sigih-contador">
-          {{ productosFiltrados().length }} de {{ productos.datos().length }} productos
+          {{ productosFiltrados().length }} de {{ productos.total() }} productos
         </span>
         @if (productos.cargando() && productos.datos().length > 0) {
           <span class="sigih-contador">
@@ -157,7 +157,7 @@
                   <td [attr.colspan]="puedeEscribir() ? 8 : 7">
                     <div class="sigih-vacio">
                       <i class="bi bi-box-seam"></i>
-                      @if (productos.datos().length === 0) {
+                      @if (productos.total() === 0 && !hayFiltros()) {
                         <strong>Aún no hay productos registrados</strong>
                         <span>
                           Cree el primer producto para comenzar a controlar el inventario.
@@ -241,6 +241,16 @@
             </tbody>
           </table>
         </div>
+
+        <app-paginador
+          [pagina]="pagina()"
+          [totalPaginas]="totalPaginas()"
+          [total]="productos.total()"
+          [desde]="desdeRegistro()"
+          [hasta]="hastaRegistro()"
+          [deshabilitado]="productos.cargando()"
+          (cambiar)="irPagina($event)"
+        />
       }
     </div>
   </div>
