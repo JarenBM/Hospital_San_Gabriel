@@ -29,7 +29,7 @@ WHERE p.name IN (
     N'sp_Categorias_Listar', N'sp_Categorias_Obtener', N'sp_Categorias_Crear',
     N'sp_Categorias_Actualizar', N'sp_Categorias_Desactivar',
     N'sp_Productos_Listar', N'sp_Productos_Obtener', N'sp_Productos_Crear',
-    N'sp_Productos_Actualizar', N'sp_Productos_Desactivar', N'sp_Productos_Reactivar',
+    N'sp_Productos_Actualizar', N'sp_Productos_Desactivar',
     N'sp_Lotes_ListarPorProducto', N'sp_Lotes_Obtener',
     N'sp_Movimientos_RegistrarEntrada', N'sp_Movimientos_RegistrarSalida',
     N'sp_Movimientos_Listar', N'sp_Movimientos_Obtener',

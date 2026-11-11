@@ -2,6 +2,7 @@
 
 from backend.errors import UsuarioNoEncontrado
 from backend.repositories import auditoria_repository
+from backend.repositories.base import total_de
 from backend.repositories.usuario_repository import (
     actualizar_usuario as actualizar_usuario_repositorio,
     asignar_rol as asignar_rol_repositorio,
@@ -27,10 +28,14 @@ def listar_usuarios(
     busqueda: str | None = None,
     id_rol: int | None = None,
     solo_activos: bool | None = None,
-) -> list[Usuario]:
-    """Devuelve los usuarios con el resumen de sus roles."""
-    filas = listar_usuarios_repositorio(busqueda, id_rol, solo_activos)
-    return [Usuario(**fila) for fila in filas]
+    pagina: int | None = None,
+    tamano: int | None = None,
+) -> tuple[list[Usuario], int]:
+    """Devuelve los usuarios con sus roles y el total de coincidencias."""
+    filas = listar_usuarios_repositorio(
+        busqueda, id_rol, solo_activos, pagina, tamano
+    )
+    return [Usuario(**fila) for fila in filas], total_de(filas)
 
 
 def obtener_usuario(id_usuario: int) -> Usuario:

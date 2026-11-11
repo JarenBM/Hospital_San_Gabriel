@@ -1,15 +1,19 @@
+/* ============================================================
+   Reportes
+   ============================================================ */
+
 .reportes__resumen-etiqueta {
   display: block;
   color: var(--sigih-texto-suave);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .reportes__resumen-valor {
   color: var(--sigih-primario-oscuro);
-  font-size: 1.3rem;
+  font-size: 1.32rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -20,7 +24,23 @@
 
 .reportes__ranking {
   width: 3rem;
-  color: var(--sigih-texto-suave);
+  color: var(--sigih-texto-tenue);
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+/* La impresión de reportes usa las utilidades d-print-none del HTML. */
+@media print {
+  .sigih-tabs {
+    display: none !important;
+  }
+
+  .sigih-tabla thead th {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+
+  .sigih-tabla tbody td {
+    border-color: #ccc !important;
+  }
 }

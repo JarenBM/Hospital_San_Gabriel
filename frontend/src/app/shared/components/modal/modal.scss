@@ -4,9 +4,9 @@
 
 .sigih-modal__titulo {
   color: var(--sigih-primario-oscuro);
-  font-size: 1.05rem;
+  font-size: 1.06rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 .sigih-modal__subtitulo {
@@ -17,18 +17,28 @@
 
 .sigih-modal .modal-content {
   border: 1px solid var(--sigih-borde);
-  border-radius: 0.9rem;
-  box-shadow: 0 24px 60px rgb(16 42 54 / 22%);
+  border-radius: var(--sigih-radio-lg);
+  box-shadow: var(--sigih-sombra-lg);
 }
 
 .sigih-modal .modal-header {
+  padding: 1rem 1.25rem;
   border-bottom-color: var(--sigih-borde);
+  background-color: var(--sigih-superficie-alt);
 }
 
 .sigih-modal .modal-footer {
+  padding: 0.85rem 1.25rem;
   border-top-color: var(--sigih-borde);
+  background-color: var(--sigih-superficie-alt);
 }
 
 .sigih-modal .modal-body {
   padding: 1.25rem;
+}
+
+.sigih-modal .modal-backdrop,
+.sigih-modal + .modal-backdrop {
+  background-color: rgb(7 60 56 / 42%);
+  backdrop-filter: blur(2px);
 }

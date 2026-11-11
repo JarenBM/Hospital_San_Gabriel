@@ -1,4 +1,4 @@
-import type { Id } from './api.models';
+import type { Id, Paginacion } from './api.models';
 
 /** Contratos de usuarios (``/api/usuarios``). */
 
@@ -41,7 +41,7 @@ export interface UsuarioRol {
 }
 
 /** Filtros de ``GET /api/usuarios``. */
-export interface FiltrosUsuario {
+export interface FiltrosUsuario extends Paginacion {
   busqueda?: string | null;
   id_rol?: Id | null;
   solo_activos?: boolean | null;

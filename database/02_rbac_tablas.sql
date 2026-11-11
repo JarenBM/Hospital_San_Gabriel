@@ -74,11 +74,21 @@ BEGIN
         accion       NVARCHAR(50) NOT NULL,
         modulo       NVARCHAR(50) NOT NULL,
         id_registro  NVARCHAR(50) NULL,
+        id_area      INT NULL
+            CONSTRAINT FK_Auditoria_Areas REFERENCES dbo.AreasHospitalarias(id_area),
         detalle      NVARCHAR(500) NULL,
         ip           NVARCHAR(45) NULL,
         fecha        DATETIME2 NOT NULL
             CONSTRAINT DF_Auditoria_Fecha DEFAULT (SYSDATETIME())
     );
+END;
+GO
+
+-- Migración idempotente para instalaciones previas sin id_area.
+IF COL_LENGTH(N'dbo.Auditoria', N'id_area') IS NULL
+BEGIN
+    ALTER TABLE dbo.Auditoria ADD id_area INT NULL
+        CONSTRAINT FK_Auditoria_Areas REFERENCES dbo.AreasHospitalarias(id_area);
 END;
 GO
 

@@ -2,6 +2,7 @@
 
 from backend.errors import ProductoNoEncontrado
 from backend.repositories import auditoria_repository
+from backend.repositories.base import total_de
 from backend.repositories.producto_repository import (
     actualizar_producto as actualizar_producto_repositorio,
     crear_producto as crear_producto_repositorio,
@@ -21,10 +22,14 @@ def listar_productos(
     busqueda: str | None = None,
     id_categoria: int | None = None,
     solo_activos: bool | None = None,
-) -> list[ProductoListado]:
-    """Devuelve productos con su categoría y su stock calculado."""
-    filas = listar_productos_repositorio(busqueda, id_categoria, solo_activos)
-    return [ProductoListado(**fila) for fila in filas]
+    pagina: int | None = None,
+    tamano: int | None = None,
+) -> tuple[list[ProductoListado], int]:
+    """Devuelve productos con su categoría, su stock y el total de coincidencias."""
+    filas = listar_productos_repositorio(
+        busqueda, id_categoria, solo_activos, pagina, tamano
+    )
+    return [ProductoListado(**fila) for fila in filas], total_de(filas)
 
 
 def obtener_producto(id_producto: int) -> Producto:

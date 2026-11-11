@@ -33,6 +33,11 @@ def _traducir_error(error: pyodbc.Error) -> Exception:
         return ConflictoEstado(
             "No se puede dejar el sistema sin un administrador activo"
         )
+    if tipo == "cuenta_protegida":
+        return ConflictoEstado(
+            "La cuenta semilla no se puede desactivar, cambiar de correo "
+            "ni perder el rol ADMINISTRADOR"
+        )
     if tipo == "datos_invalidos":
         return DatosInvalidos("Los datos del usuario no son válidos")
     return error
@@ -62,14 +67,18 @@ def listar_usuarios(
     busqueda: str | None = None,
     id_rol: int | None = None,
     solo_activos: bool | None = None,
+    pagina: int | None = None,
+    tamano: int | None = None,
 ) -> list[dict]:
-    """Ejecuta dbo.sp_Usuarios_Listar."""
+    """Ejecuta dbo.sp_Usuarios_Listar con sus filtros y paginación opcionales."""
     return ejecutar_lista(
         Sp.USUARIOS_LISTAR,
         {
             "busqueda": busqueda,
             "id_rol": id_rol,
             "solo_activos": solo_activos,
+            "pagina": pagina,
+            "tamano": tamano,
         },
     )
 

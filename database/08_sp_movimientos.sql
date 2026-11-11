@@ -116,6 +116,25 @@ BEGIN
 
         DECLARE @id_movimiento INT = CAST(SCOPE_IDENTITY() AS INT);
 
+        -- Auditoría dentro de la misma transacción: si el movimiento se
+        -- confirma, su rastro también; si se revierte, no queda registro.
+        INSERT dbo.Auditoria
+        (
+            id_usuario, accion, modulo, id_registro, detalle
+        )
+        VALUES
+        (
+            @id_usuario,
+            N'ENTRADA',
+            N'movimientos',
+            CAST(@id_movimiento AS NVARCHAR(50)),
+            LEFT(CONCAT(
+                N'Producto: ', @id_producto,
+                N', lote: ', COALESCE(@numero_lote, N'sin lote'),
+                N', cantidad: ', @cantidad
+            ), 500)
+        );
+
         COMMIT;
 
         SELECT @id_movimiento AS id_movimiento,
@@ -132,11 +151,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_Movimientos_RegistrarSalida
     @id_producto INT,
-    @id_lote     INT,
     @id_usuario  INT,
     @id_area     INT,
     @cantidad    INT,
-    @motivo      NVARCHAR(200)
+    @motivo      NVARCHAR(200),
+    @id_lote     INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -145,6 +164,7 @@ BEGIN
     DECLARE @requiere BIT,
             @stock_lote INT,
             @vence DATE,
+            @numero_lote NVARCHAR(50),
             @prev INT,
             @nuevo INT;
 
@@ -176,18 +196,46 @@ BEGIN
         )
             THROW 51205, N'Área inválida o inactiva', 1;
 
-        SELECT @stock_lote = stock_actual,
-               @vence = fecha_vencimiento
-        FROM dbo.Lotes WITH (UPDLOCK, HOLDLOCK)
-        WHERE id_lote = @id_lote AND id_producto = @id_producto;
+        IF @id_lote IS NULL
+        BEGIN
+            -- FEFO: lote vigente con el vencimiento más próximo que cubra
+            -- la cantidad pedida. Los lotes sin vencimiento quedan al final.
+            SELECT TOP (1)
+                   @id_lote     = l.id_lote,
+                   @stock_lote  = l.stock_actual,
+                   @vence       = l.fecha_vencimiento,
+                   @numero_lote = l.numero_lote
+            FROM dbo.Lotes l WITH (UPDLOCK, HOLDLOCK)
+            WHERE l.id_producto = @id_producto
+              AND l.stock_actual >= @cantidad
+              AND (
+                    l.fecha_vencimiento IS NULL
+                    OR l.fecha_vencimiento > CONVERT(date, GETDATE())
+                  )
+            ORDER BY CASE WHEN l.fecha_vencimiento IS NULL THEN 1 ELSE 0 END,
+                     l.fecha_vencimiento,
+                     l.id_lote;
 
-        IF @stock_lote IS NULL
-            THROW 51206, N'Lote no encontrado', 1;
+            IF @id_lote IS NULL
+                THROW 51209, N'No hay lotes vigentes con stock suficiente para la cantidad solicitada', 1;
+        END
+        ELSE
+        BEGIN
+            SELECT @stock_lote  = stock_actual,
+                   @vence       = fecha_vencimiento,
+                   @numero_lote = numero_lote
+            FROM dbo.Lotes WITH (UPDLOCK, HOLDLOCK)
+            WHERE id_lote = @id_lote AND id_producto = @id_producto;
+
+            IF @stock_lote IS NULL
+                THROW 51206, N'Lote no encontrado', 1;
+        END;
 
         IF @requiere = 1 AND @vence IS NULL
             THROW 51207, N'El lote no tiene fecha de vencimiento', 1;
 
-        IF @vence < CONVERT(date, GETDATE())
+        -- Un lote con vencimiento hoy ya no es despachable.
+        IF @vence <= CONVERT(date, GETDATE())
             THROW 51208, N'El lote está vencido', 1;
 
         IF @stock_lote < @cantidad
@@ -220,9 +268,32 @@ BEGIN
 
         DECLARE @id_movimiento INT = CAST(SCOPE_IDENTITY() AS INT);
 
+        -- Auditoría dentro de la misma transacción: si el movimiento se
+        -- confirma, su rastro también; si se revierte, no queda registro.
+        INSERT dbo.Auditoria
+        (
+            id_usuario, accion, modulo, id_registro, id_area, detalle
+        )
+        VALUES
+        (
+            @id_usuario,
+            N'SALIDA',
+            N'movimientos',
+            CAST(@id_movimiento AS NVARCHAR(50)),
+            @id_area,
+            LEFT(CONCAT(
+                N'Producto: ', @id_producto,
+                N', área: ', @id_area,
+                N', lote: ', COALESCE(@numero_lote, N'sin lote'),
+                N', cantidad: ', @cantidad
+            ), 500)
+        );
+
         COMMIT;
 
         SELECT @id_movimiento AS id_movimiento,
+               @id_lote AS id_lote,
+               @numero_lote AS numero_lote,
                @prev AS stock_anterior,
                @nuevo AS stock_posterior;
     END TRY
@@ -238,10 +309,28 @@ CREATE OR ALTER PROCEDURE dbo.sp_Movimientos_Listar
     @tipo_movimiento VARCHAR(10) = NULL,
     @id_area         INT = NULL,
     @desde           DATE = NULL,
-    @hasta           DATE = NULL
+    @hasta           DATE = NULL,
+    @busqueda        NVARCHAR(150) = NULL,
+    @pagina          INT = NULL,
+    @tamano          INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @offset INT = 0,
+            @fetch  INT = 2147483647;
+
+    IF @pagina IS NOT NULL OR @tamano IS NOT NULL
+    BEGIN
+        SET @pagina = ISNULL(@pagina, 1);
+        SET @tamano = ISNULL(@tamano, 25);
+
+        IF @pagina < 1 SET @pagina = 1;
+        IF @tamano < 1 SET @tamano = 25;
+
+        SET @offset = (@pagina - 1) * @tamano;
+        SET @fetch  = @tamano;
+    END
 
     SELECT m.id_movimiento,
            m.fecha_movimiento,
@@ -255,7 +344,8 @@ BEGIN
            m.cantidad,
            m.motivo,
            m.stock_anterior,
-           m.stock_posterior
+           m.stock_posterior,
+           COUNT(*) OVER () AS total
     FROM dbo.Movimientos m
     JOIN dbo.Productos p ON p.id_producto = m.id_producto
     JOIN dbo.Lotes l ON l.id_lote = m.id_lote
@@ -267,7 +357,14 @@ BEGIN
       AND (@desde IS NULL OR m.fecha_movimiento >= @desde)
       AND (@hasta IS NULL
            OR m.fecha_movimiento < DATEADD(day, 1, CAST(@hasta AS DATETIME2)))
-    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC;
+      AND (@busqueda IS NULL
+           OR p.codigo LIKE N'%' + @busqueda + N'%'
+           OR p.nombre LIKE N'%' + @busqueda + N'%'
+           OR l.numero_lote LIKE N'%' + @busqueda + N'%'
+           OR m.motivo LIKE N'%' + @busqueda + N'%'
+           OR u.nombre LIKE N'%' + @busqueda + N'%')
+    ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC
+    OFFSET @offset ROWS FETCH NEXT @fetch ROWS ONLY;
 END;
 GO
 

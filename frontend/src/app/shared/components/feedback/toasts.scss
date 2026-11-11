@@ -14,22 +14,23 @@
   overflow: hidden;
   border: 1px solid var(--sigih-borde);
   border-left-width: 4px;
-  border-radius: 0.75rem;
+  border-radius: var(--sigih-radio);
   background-color: #fff;
-  box-shadow: 0 14px 34px rgb(16 42 54 / 18%);
+  box-shadow: var(--sigih-sombra-lg);
   pointer-events: auto;
+  animation: sigih-toast-entrada 180ms ease both;
 }
 
 .sigih-toast--exito {
-  border-left-color: #16835a;
+  border-left-color: var(--sigih-exito);
 }
 
 .sigih-toast--error {
-  border-left-color: #c43c3c;
+  border-left-color: var(--sigih-peligro);
 }
 
 .sigih-toast--advertencia {
-  border-left-color: #b5760b;
+  border-left-color: var(--sigih-aviso);
 }
 
 .sigih-toast--info {
@@ -39,7 +40,7 @@
 .sigih-toast .toast-header {
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid var(--sigih-borde);
-  background-color: #fff;
+  background-color: var(--sigih-superficie-alt);
   font-size: 0.82rem;
 }
 
@@ -49,15 +50,15 @@
 }
 
 .sigih-toast--exito .sigih-toast__icono {
-  color: #16835a;
+  color: var(--sigih-exito);
 }
 
 .sigih-toast--error .sigih-toast__icono {
-  color: #c43c3c;
+  color: var(--sigih-peligro);
 }
 
 .sigih-toast--advertencia .sigih-toast__icono {
-  color: #b5760b;
+  color: var(--sigih-aviso);
 }
 
 .sigih-toast--info .sigih-toast__icono {
@@ -77,4 +78,22 @@
   font-size: 0.74rem;
   line-height: 1.35;
   word-break: break-word;
+}
+
+@keyframes sigih-toast-entrada {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sigih-toast {
+    animation: none;
+  }
 }

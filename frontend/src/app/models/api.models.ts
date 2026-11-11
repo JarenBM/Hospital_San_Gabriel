@@ -46,3 +46,11 @@ export interface RespuestaTotal {
 export interface FiltrosBase {
   solo_activos?: boolean | null;
 }
+
+/** Parámetros de paginación de los listados. */
+export interface Paginacion {
+  /** Página solicitada; empieza en 1. */
+  pagina?: number | null;
+  /** Filas por página (máximo 100). */
+  tamano?: number | null;
+}

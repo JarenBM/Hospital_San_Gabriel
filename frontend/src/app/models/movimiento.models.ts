@@ -1,4 +1,4 @@
-import type { FechaHoraISO, FechaISO, Id } from './api.models';
+import type { FechaHoraISO, FechaISO, Id, Paginacion } from './api.models';
 
 /** Contratos de entradas, salidas y movimientos (``/api/movimientos``). */
 
@@ -26,7 +26,8 @@ export interface EntradaCrear {
 /** Cuerpo de ``POST /api/movimientos/salidas``. */
 export interface SalidaCrear {
   id_producto: Id;
-  id_lote: Id;
+  /** ``null`` deja que el backend elija el lote por FEFO. */
+  id_lote?: Id | null;
   id_area: Id;
   cantidad: number;
   motivo: string;
@@ -43,6 +44,8 @@ export interface EntradaRegistrada {
 /** Resultado de ``POST /api/movimientos/salidas``. */
 export interface SalidaRegistrada {
   id_movimiento: Id;
+  id_lote: Id;
+  numero_lote: string | null;
   stock_anterior: number;
   stock_posterior: number;
 }
@@ -65,10 +68,11 @@ export interface MovimientoListado {
 }
 
 /** Filtros de ``GET /api/movimientos``. */
-export interface FiltrosMovimiento {
+export interface FiltrosMovimiento extends Paginacion {
   id_producto?: Id | null;
   tipo_movimiento?: TipoMovimiento | null;
   id_area?: Id | null;
   desde?: FechaISO | null;
   hasta?: FechaISO | null;
+  busqueda?: string | null;
 }

@@ -1,6 +1,9 @@
 -- SIGIH | 10 - Alertas y dashboard (solo lectura)
 -- Convención: sp_Alertas_<Accion> / sp_Dashboard_<Accion>
--- sp_Alertas_PorVencer conserva el comportamiento legacy: devuelve PROXIMO y VENCIDO.
+-- Un lote vence al terminar el día anterior: ``fecha_vencimiento <= hoy``
+-- cuenta como VENCIDO y deja de sumar al stock disponible. Por eso
+-- ``sp_Alertas_PorVencer`` con 30 días devuelve 1..30 días como PROXIMO.
+-- Conserva el contrato legacy: devuelve PROXIMO y VENCIDO en un solo set.
 
 USE SIGIH;
 GO
@@ -21,7 +24,7 @@ BEGIN
            COALESCE(
                SUM(CASE
                        WHEN l.fecha_vencimiento IS NULL
-                            OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                            OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                        THEN l.stock_actual
                        ELSE 0
                    END), 0
@@ -33,7 +36,7 @@ BEGIN
     HAVING COALESCE(
                SUM(CASE
                        WHEN l.fecha_vencimiento IS NULL
-                            OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                            OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                        THEN l.stock_actual
                        ELSE 0
                    END), 0
@@ -57,7 +60,7 @@ BEGIN
            l.fecha_vencimiento,
            l.stock_actual,
            CASE
-               WHEN l.fecha_vencimiento < CONVERT(date, GETDATE()) THEN 'VENCIDO'
+               WHEN l.fecha_vencimiento <= CONVERT(date, GETDATE()) THEN 'VENCIDO'
                ELSE 'PROXIMO'
            END AS estado
     FROM dbo.Lotes l
@@ -90,7 +93,7 @@ BEGIN
              HAVING COALESCE(
                         SUM(CASE
                                 WHEN l.fecha_vencimiento IS NULL
-                                     OR l.fecha_vencimiento >= CONVERT(date, GETDATE())
+                                     OR l.fecha_vencimiento > CONVERT(date, GETDATE())
                                 THEN l.stock_actual
                                 ELSE 0
                             END), 0
@@ -102,15 +105,15 @@ BEGIN
          JOIN dbo.Productos p ON p.id_producto = l.id_producto
          WHERE p.activo = 1
            AND l.stock_actual > 0
-           AND l.fecha_vencimiento < CONVERT(date, GETDATE())) AS lotes_vencidos,
+           AND l.fecha_vencimiento <= CONVERT(date, GETDATE())) AS lotes_vencidos,
 
         (SELECT COUNT(*)
          FROM dbo.Lotes l
          JOIN dbo.Productos p ON p.id_producto = l.id_producto
          WHERE p.activo = 1
            AND l.stock_actual > 0
-           AND l.fecha_vencimiento BETWEEN CONVERT(date, GETDATE())
-                                        AND DATEADD(day, 30, CONVERT(date, GETDATE()))
+           AND l.fecha_vencimiento > CONVERT(date, GETDATE())
+           AND l.fecha_vencimiento <= DATEADD(day, 30, CONVERT(date, GETDATE()))
         ) AS lotes_proximos_vencer,
 
         (SELECT COALESCE(

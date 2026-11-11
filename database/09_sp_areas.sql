@@ -83,11 +83,21 @@ CREATE OR ALTER PROCEDURE dbo.sp_Areas_Desactivar
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM dbo.AreasHospitalarias WHERE id_area = @id_area
+    )
+        THROW 51503, N'Área no encontrada', 1;
+
+    -- El área conserva la trazabilidad de sus consumos: no se desactiva
+    -- mientras existan movimientos que la referencien.
+    IF EXISTS (
+        SELECT 1 FROM dbo.Movimientos WHERE id_area = @id_area
+    )
+        THROW 51504, N'El área tiene movimientos registrados y no se puede desactivar', 1;
 
     UPDATE dbo.AreasHospitalarias SET activo = 0 WHERE id_area = @id_area;
-
-    IF @@ROWCOUNT = 0
-        THROW 51503, N'Área no encontrada', 1;
 END;
 GO
 

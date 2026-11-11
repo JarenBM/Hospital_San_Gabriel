@@ -14,7 +14,7 @@ DescripcionCategoria = Annotated[
 
 
 class Categoria(BaseModel):
-    """Fila devuelta por dbo.sp_Categoria_Listar y dbo.sp_Categoria_Obtener."""
+    """Fila devuelta por dbo.sp_Categorias_Listar y dbo.sp_Categorias_Obtener."""
 
     id_categoria: int
     nombre: str
@@ -23,14 +23,14 @@ class Categoria(BaseModel):
 
 
 class CategoriaCrear(BaseModel):
-    """Datos para dbo.sp_Categoria_Crear."""
+    """Datos para dbo.sp_Categorias_Crear."""
 
     nombre: NombreCategoria
     descripcion: DescripcionCategoria | None = None
 
 
 class CategoriaActualizar(BaseModel):
-    """Datos para dbo.sp_Categoria_Actualizar.
+    """Datos para dbo.sp_Categorias_Actualizar.
 
     Si ``activo`` se omite, el estado actual de la categoría no cambia.
     """

@@ -16,6 +16,7 @@ export type {
   FechaISO,
   FiltrosBase,
   Id,
+  Paginacion,
   RespuestaTotal,
 } from './api.models';
 

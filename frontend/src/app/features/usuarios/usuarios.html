@@ -1,10 +1,15 @@
 <section class="sigih-pagina">
-  <header class="d-flex flex-wrap align-items-end justify-content-between gap-2">
-    <div>
-      <h2 class="sigih-titulo h5 mb-1">Usuarios del sistema</h2>
-      <p class="sigih-contador mb-0">
-        {{ usuariosFiltrados().length }} de {{ usuarios.datos().length }} usuarios
-      </p>
+  <header>
+    <div class="sigih-cabecera">
+      <span class="sigih-cabecera__icono" aria-hidden="true">
+        <i class="bi bi-people"></i>
+      </span>
+      <div>
+        <h2 class="sigih-titulo h5 mb-1">Usuarios del sistema</h2>
+        <p class="sigih-contador mb-0">
+          {{ usuariosFiltrados().length }} de {{ usuarios.total() }} usuarios
+        </p>
+      </div>
     </div>
     @if (puedeGestionar()) {
       <button type="button" class="btn btn-primary btn-sm" (click)="abrirAlta()">
@@ -43,7 +48,7 @@
               class="form-control"
               placeholder="Nombre o correo"
               [value]="busqueda()"
-              (input)="busqueda.set(campoBusqueda.value)"
+              (input)="cambiarBusqueda(campoBusqueda.value)"
             />
           </div>
         </div>
@@ -67,13 +72,14 @@
           <label class="form-label" for="filtroRolUsuarios">Rol</label>
           <select
             id="filtroRolUsuarios"
-            #campoRolFiltro
             class="form-select form-select-sm"
-            (change)="filtroRol.set(campoRolFiltro.value)"
+            (change)="cambiarRolFiltro($event)"
           >
-            <option value="" [selected]="filtroRol() === ''">Todos los roles</option>
-            @for (rol of rolesFiltro(); track rol) {
-              <option [value]="rol" [selected]="filtroRol() === rol">{{ rol }}</option>
+            <option value="" [selected]="filtroRol() === null">Todos los roles</option>
+            @for (rol of rolesCatalogo.datos(); track rol.id_rol) {
+              <option [value]="rol.id_rol" [selected]="filtroRol() === rol.id_rol">
+                {{ rol.nombre }}
+              </option>
             }
           </select>
         </div>
@@ -96,7 +102,7 @@
           <i class="bi bi-people"></i>
           <strong>Sin usuarios para mostrar</strong>
           <span>
-            @if (usuarios.datos().length === 0) {
+            @if (usuarios.total() === 0 && !hayFiltros()) {
               Aún no hay cuentas registradas.
             } @else {
               Pruebe con otros criterios de búsqueda.
@@ -194,6 +200,16 @@
             </tbody>
           </table>
         </div>
+
+        <app-paginador
+          [pagina]="pagina()"
+          [totalPaginas]="totalPaginas()"
+          [total]="usuarios.total()"
+          [desde]="desdeRegistro()"
+          [hasta]="hastaRegistro()"
+          [deshabilitado]="usuarios.cargando()"
+          (cambiar)="irPagina($event)"
+        />
       }
     </div>
   </div>

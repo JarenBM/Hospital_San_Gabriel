@@ -1,7 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
+import type { HttpResponse } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import type { Signal, WritableSignal } from '@angular/core';
-import { catchError, finalize, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import type {
   ApiError,
   Area,
@@ -60,11 +61,14 @@ export class Recurso<T> {
   private readonly _cargando = signal(false);
   private readonly _error = signal<ApiError | null>(null);
   private readonly _cargado = signal(false);
+  private readonly _total = signal(0);
 
   readonly datos: Signal<T>;
   readonly cargando = this._cargando.asReadonly();
   readonly error = this._error.asReadonly();
   readonly cargado = this._cargado.asReadonly();
+  /** Total de coincidencias cuando el listado está paginado. */
+  readonly total = this._total.asReadonly();
 
   constructor(inicial: T) {
     this._datos = signal(inicial);
@@ -78,8 +82,11 @@ export class Recurso<T> {
   }
 
   /** @internal */
-  completar(datos: T): void {
+  completar(datos: T, total?: number): void {
     this._datos.set(datos);
+    this._total.set(
+      total ?? (Array.isArray(datos) ? datos.length : 0),
+    );
     this._cargando.set(false);
     this._error.set(null);
     this._cargado.set(true);
@@ -104,6 +111,7 @@ export class Recurso<T> {
   /** @internal */
   reiniciar(inicial: T): void {
     this._datos.set(inicial);
+    this._total.set(0);
     this._cargando.set(false);
     this._error.set(null);
     this._cargado.set(false);
@@ -119,8 +127,8 @@ export class Recurso<T> {
  *   servidor se cachea en señales por recurso.
  * - Los errores se normalizan a ``ApiError``. El ``ErrorInterceptor`` ya
  *   notifica 401/403/409/500; aquí solo se guarda el error del recurso.
- *
- * La paginación se difiere a la fase 3 del frontend.
+ * - Los listados paginados leen ``X-Total-Count`` y exponen el total en
+ *   ``Recurso.total``.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -137,7 +145,10 @@ export class ApiService {
   // ---------- Recursos remotos ----------
 
   readonly categorias = new Recurso<Categoria[]>([]);
+  /** Catálogo completo; lo usan los selectores de lotes y reportes. */
   readonly productos = new Recurso<ProductoListado[]>([]);
+  /** Página del catálogo de productos; la usa la vista de productos. */
+  readonly productosPagina = new Recurso<ProductoListado[]>([]);
   readonly areas = new Recurso<Area[]>([]);
   readonly usuarios = new Recurso<Usuario[]>([]);
   readonly rolesCatalogo = new Recurso<Rol[]>([]);
@@ -287,10 +298,11 @@ export class ApiService {
   // ---------- Usuarios ----------
 
   cargarUsuarios(filtros?: FiltrosUsuario): Observable<Usuario[]> {
-    return this.cargarEn(
+    return this.cargarPaginadoEn(
       this.usuarios,
       this.http.get<Usuario[]>(`${this.base}/usuarios`, {
         params: this.parametros(filtros),
+        observe: 'response',
       }),
     );
   }
@@ -522,6 +534,20 @@ export class ApiService {
     );
   }
 
+  /** Página del catálogo de productos, con filtros y ``X-Total-Count``. */
+  cargarProductosPagina(
+    filtros: FiltrosProducto = {},
+  ): Observable<ProductoListado[]> {
+    this.filtrosProductosPagina = filtros;
+    return this.cargarPaginadoEn(
+      this.productosPagina,
+      this.http.get<ProductoListado[]>(`${this.base}/productos`, {
+        params: this.parametros(filtros),
+        observe: 'response',
+      }),
+    );
+  }
+
   obtenerProducto(idProducto: number): Observable<Producto> {
     return this.ejecutar(
       this.http.get<Producto>(`${this.base}/productos/${idProducto}`),
@@ -586,10 +612,11 @@ export class ApiService {
   cargarMovimientos(filtros?: FiltrosMovimiento): Observable<MovimientoListado[]> {
     const usados = filtros ?? this.filtrosMovimientos;
     this.filtrosMovimientos = usados;
-    return this.cargarEn(
+    return this.cargarPaginadoEn(
       this.movimientos,
       this.http.get<MovimientoListado[]>(`${this.base}/movimientos`, {
         params: this.parametros(usados),
+        observe: 'response',
       }),
     );
   }
@@ -604,6 +631,13 @@ export class ApiService {
       this.http.get<MovimientoListado[]>(`${this.base}/movimientos`, {
         params: this.parametros(filtros),
       }),
+    );
+  }
+
+  /** Catálogo de motivos de entrada publicado por el backend. */
+  cargarMotivosEntrada(): Observable<string[]> {
+    return this.ejecutar(
+      this.http.get<string[]>(`${this.base}/movimientos/motivos-entrada`),
     );
   }
 
@@ -697,6 +731,7 @@ export class ApiService {
   // ---------- Internos ----------
 
   private filtrosProductos: FiltrosProducto = {};
+  private filtrosProductosPagina: FiltrosProducto = {};
   private filtrosMovimientos: FiltrosMovimiento = {};
   private rangoResumen: { desde?: string | null; hasta?: string | null } = {};
   private diasPorVencer = 30;
@@ -716,6 +751,28 @@ export class ApiService {
     recurso.iniciar();
     return peticion.pipe(
       tap((datos) => recurso.completar(datos)),
+      catchError((error: unknown) => {
+        const apiError = normalizarErrorHttp(error);
+        recurso.fallar(apiError);
+        return throwError(() => apiError);
+      }),
+      finalize(() => recurso.detener()),
+    );
+  }
+
+  private cargarPaginadoEn<T>(
+    recurso: Recurso<T[]>,
+    peticion: Observable<HttpResponse<T[]>>,
+  ): Observable<T[]> {
+    recurso.iniciar();
+    return peticion.pipe(
+      tap((respuesta) => {
+        const datos = respuesta.body ?? [];
+        const cabecera = respuesta.headers.get('X-Total-Count');
+        const total = cabecera === null ? datos.length : Number(cabecera);
+        recurso.completar(datos, Number.isFinite(total) ? total : datos.length);
+      }),
+      map((respuesta) => respuesta.body ?? []),
       catchError((error: unknown) => {
         const apiError = normalizarErrorHttp(error);
         recurso.fallar(apiError);
@@ -769,6 +826,11 @@ export class ApiService {
     if (this.productos.cargado()) {
       this.cargarProductos().subscribe({ error: () => undefined });
     }
+    if (this.productosPagina.cargado()) {
+      this.cargarProductosPagina(this.filtrosProductosPagina).subscribe({
+        error: () => undefined,
+      });
+    }
   }
 
   private refrescarTrasMovimiento(idProducto: number): void {
@@ -795,6 +857,7 @@ export class ApiService {
   private limpiarCaches(): void {
     this.categorias.reiniciar([]);
     this.productos.reiniciar([]);
+    this.productosPagina.reiniciar([]);
     this.areas.reiniciar([]);
     this.usuarios.reiniciar([]);
     this.rolesCatalogo.reiniciar([]);

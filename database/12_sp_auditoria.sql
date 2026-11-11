@@ -15,7 +15,8 @@ CREATE OR ALTER PROCEDURE dbo.sp_Auditoria_Registrar
     @modulo     NVARCHAR(50),
     @id_registro NVARCHAR(50) = NULL,
     @detalle    NVARCHAR(500) = NULL,
-    @ip         NVARCHAR(45) = NULL
+    @ip         NVARCHAR(45) = NULL,
+    @id_area    INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -31,9 +32,15 @@ BEGIN
            )
             SET @id_usuario = NULL;
 
+        IF @id_area IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1 FROM dbo.AreasHospitalarias WHERE id_area = @id_area
+           )
+            SET @id_area = NULL;
+
         INSERT dbo.Auditoria
         (
-            id_usuario, accion, modulo, id_registro, detalle, ip
+            id_usuario, accion, modulo, id_registro, id_area, detalle, ip
         )
         VALUES
         (
@@ -41,6 +48,7 @@ BEGIN
             LEFT(TRIM(@accion), 50),
             LEFT(TRIM(@modulo), 50),
             LEFT(@id_registro, 50),
+            @id_area,
             LEFT(@detalle, 500),
             LEFT(@ip, 45)
         );

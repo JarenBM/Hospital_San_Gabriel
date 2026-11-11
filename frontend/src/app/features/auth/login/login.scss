@@ -6,7 +6,7 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 100dvh;
-  background-color: var(--sigih-superficie);
+  background-color: var(--sigih-fondo);
 }
 
 /* ---------- Panel de marca ---------- */
@@ -18,8 +18,9 @@
   padding: 3rem;
   color: #effcfa;
   background:
-    radial-gradient(120% 120% at 100% 0%, rgb(29 127 212 / 45%) 0%, transparent 55%),
-    linear-gradient(150deg, #073f3f 0%, #0b5f5f 55%, #0d7373 100%);
+    radial-gradient(120% 110% at 100% 0%, rgb(20 154 143 / 42%) 0%, transparent 56%),
+    radial-gradient(90% 80% at 0% 100%, rgb(14 116 144 / 38%) 0%, transparent 58%),
+    linear-gradient(150deg, #06302d 0%, #0b4f4a 55%, #0d6b64 100%);
 }
 
 .login__marca::after {
@@ -28,7 +29,7 @@
   background-image:
     linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
-  background-size: 46px 46px;
+  background-size: 42px 42px;
   content: '';
   mask-image: radial-gradient(75% 80% at 70% 15%, #000 0%, transparent 78%);
   pointer-events: none;
@@ -50,22 +51,22 @@
   align-self: flex-start;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.8rem;
-  border: 1px solid rgb(255 255 255 / 28%);
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgb(255 255 255 / 26%);
   border-radius: 999px;
   background-color: rgb(255 255 255 / 10%);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .login__titulo {
-  margin: 1.2rem 0 0.9rem;
-  font-size: clamp(2.1rem, 3.6vw, 3rem);
+  margin: 1.25rem 0 0.9rem;
+  font-size: clamp(2.1rem, 3.6vw, 3.05rem);
   font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.025em;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
 }
 
 .login__titulo span {
@@ -75,7 +76,7 @@
 
 .login__bajada {
   max-width: 30rem;
-  margin-bottom: 1.9rem;
+  margin-bottom: 2rem;
   color: rgb(233 250 250 / 80%);
   font-size: 1rem;
   line-height: 1.65;
@@ -84,7 +85,7 @@
 .login__beneficios {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.95rem;
   margin: 0 0 2rem;
   padding: 0;
   list-style: none;
@@ -93,7 +94,7 @@
 .login__beneficios li {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.8rem;
 }
 
 .login__beneficios i {
@@ -101,10 +102,11 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 0.65rem;
-  background-color: rgb(255 255 255 / 12%);
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: var(--sigih-radio);
+  background-color: rgb(255 255 255 / 11%);
   color: #b8f4ea;
   font-size: 1.05rem;
 }
@@ -115,7 +117,7 @@
 }
 
 .login__beneficios span {
-  color: rgb(233 250 250 / 65%);
+  color: rgb(233 250 250 / 66%);
   font-size: 0.8rem;
 }
 
@@ -124,7 +126,7 @@
   align-items: center;
   gap: 0.45rem;
   margin: 0;
-  color: rgb(233 250 250 / 55%);
+  color: rgb(233 250 250 / 52%);
   font-size: 0.76rem;
 }
 
@@ -137,22 +139,23 @@
   justify-content: center;
   padding: 2rem 1.25rem;
   background:
-    radial-gradient(80% 60% at 100% 100%, rgb(15 110 110 / 8%) 0%, transparent 60%),
-    var(--sigih-superficie);
+    radial-gradient(80% 60% at 100% 100%, rgb(15 118 110 / 9%) 0%, transparent 60%),
+    radial-gradient(60% 50% at 0% 0%, rgb(14 116 144 / 6%) 0%, transparent 60%),
+    var(--sigih-fondo);
 }
 
 .login__tarjeta {
   width: 100%;
   max-width: 26rem;
   border-top: 4px solid var(--sigih-primario);
-  box-shadow: 0 18px 44px rgb(16 42 54 / 10%);
+  box-shadow: var(--sigih-sombra-lg);
 }
 
 .login__cabecera {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.5rem;
 }
 
 .login__logo {
@@ -160,49 +163,61 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.9rem;
-  height: 2.9rem;
-  border-radius: 0.8rem;
-  background-color: var(--sigih-primario-claro);
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--sigih-radio);
+  background: linear-gradient(145deg, var(--sigih-primario-claro), #d9f2ed);
   color: var(--sigih-primario-oscuro);
-  font-size: 1.35rem;
+  font-size: 1.4rem;
+  box-shadow: inset 0 0 0 1px rgb(15 118 110 / 8%);
 }
 
 .login__form-titulo {
   margin: 0;
   color: var(--sigih-primario-oscuro);
-  font-size: 1.3rem;
+  font-size: 1.32rem;
   font-weight: 700;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
 .login__form-sub {
-  margin: 0.1rem 0 0;
+  margin: 0.15rem 0 0;
   color: var(--sigih-texto-suave);
   font-size: 0.8rem;
 }
 
 .login .input-group-text {
-  border-color: var(--sigih-borde);
-  background-color: var(--sigih-superficie);
+  border-color: var(--sigih-borde-fuerte);
+  background-color: var(--sigih-superficie-alt);
   color: var(--sigih-texto-suave);
+}
+
+.login .input-group > .form-control {
+  border-left: 0;
+}
+
+.login .input-group > .input-group-text:first-child {
+  border-right: 0;
 }
 
 .login__ojo {
   --bs-btn-color: var(--sigih-texto-suave);
-  --bs-btn-border-color: var(--sigih-borde);
+  --bs-btn-border-color: var(--sigih-borde-fuerte);
   --bs-btn-hover-bg: var(--sigih-primario-claro);
   --bs-btn-hover-border-color: var(--sigih-primario);
   --bs-btn-hover-color: var(--sigih-primario-oscuro);
+  border-left: 0;
 }
 
 .login__enviar {
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
+  padding-block: 0.62rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .login__ayuda {
-  margin: 1.25rem 0 0;
+  margin: 1.35rem 0 0;
   color: var(--sigih-texto-suave);
   font-size: 0.76rem;
   text-align: center;
@@ -210,7 +225,7 @@
 
 .login__pie {
   margin: 1.5rem 0 0;
-  color: var(--sigih-texto-suave);
+  color: var(--sigih-texto-tenue);
   font-size: 0.72rem;
   text-align: center;
 }

@@ -10,25 +10,31 @@
   max-width: 30rem;
 }
 
+.dialogo-confirmacion .modal-content {
+  border: 1px solid var(--sigih-borde);
+  border-radius: var(--sigih-radio-lg);
+  box-shadow: var(--sigih-sombra-lg);
+}
+
 .dialogo-confirmacion__icono {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 2.9rem;
-  height: 2.9rem;
-  border-radius: 0.8rem;
-  font-size: 1.35rem;
+  width: 2.95rem;
+  height: 2.95rem;
+  border-radius: var(--sigih-radio);
+  font-size: 1.38rem;
 }
 
 .dialogo-confirmacion__icono--peligro {
-  background-color: #fdeaea;
-  color: #c43c3c;
+  background-color: var(--sigih-peligro-claro);
+  color: var(--sigih-peligro);
 }
 
 .dialogo-confirmacion__icono--advertencia {
-  background-color: #fdf3df;
-  color: #a96d08;
+  background-color: var(--sigih-aviso-claro);
+  color: var(--sigih-aviso);
 }
 
 .dialogo-confirmacion__icono--info {
@@ -39,7 +45,7 @@
 .dialogo-confirmacion__titulo {
   margin: 0 0 0.35rem;
   color: var(--sigih-primario-oscuro);
-  font-size: 1.05rem;
+  font-size: 1.06rem;
   font-weight: 700;
 }
 
@@ -51,10 +57,10 @@
 }
 
 .dialogo-confirmacion__detalle {
-  margin: 0.4rem 0 0;
-  padding: 0.5rem 0.65rem;
-  border-radius: 0.5rem;
-  background-color: var(--sigih-superficie);
+  margin: 0.45rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--sigih-radio-sm);
+  background-color: var(--sigih-superficie-alt);
   color: var(--sigih-texto-suave);
   font-size: 0.78rem;
   line-height: 1.4;

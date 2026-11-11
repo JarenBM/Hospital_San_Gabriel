@@ -5,43 +5,46 @@
   min-height: 100dvh;
   padding: 1.5rem 1rem;
   background:
-    radial-gradient(70% 55% at 50% 0%, rgb(15 110 110 / 8%) 0%, transparent 65%),
-    var(--sigih-superficie);
+    radial-gradient(70% 55% at 50% 0%, rgb(15 118 110 / 10%) 0%, transparent 65%),
+    var(--sigih-fondo);
 }
 
 .error__tarjeta {
   width: 100%;
   max-width: 34rem;
+  overflow: hidden;
   border-top: 4px solid var(--sigih-primario);
   text-align: center;
+  box-shadow: var(--sigih-sombra-lg);
 }
 
 .error__codigo {
   display: block;
   color: var(--sigih-borde);
-  font-size: 3.4rem;
+  font-size: 3.5rem;
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
 }
 
 .error__icono {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 3.5rem;
+  height: 3.5rem;
   margin-top: 0.9rem;
-  border-radius: 1rem;
+  border-radius: var(--sigih-radio-lg);
   background-color: var(--sigih-primario-claro);
   color: var(--sigih-primario-oscuro);
-  font-size: 1.6rem;
+  font-size: 1.65rem;
 }
 
 .error__titulo {
   margin: 1rem 0 0.6rem;
   color: var(--sigih-primario-oscuro);
-  font-size: 1.55rem;
+  font-size: 1.58rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -72,6 +75,6 @@
 
 .error__nota {
   margin: 1.5rem 0 0;
-  color: var(--sigih-texto-suave);
+  color: var(--sigih-texto-tenue);
   font-size: 0.76rem;
 }
